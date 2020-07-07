@@ -1,16 +1,21 @@
 clc; clear; close all; 
-%%UVFIT_COMP compararison to fit modal velocities based on the EVP.
-%  
+%%UVFIT_COMP computes harmonic fits (u,v,p) from HYCOM profiles.
+% UVFIT_COMP is used to compare the eigenfunctions computed using 
+% Jeffrey Early's InternalModes solver with other finite difference
+% (FD) schemes. 
+%
+% INPUT OPTIONS: (=1 plot, =0 no plot) 
+% plotini => plots density, stratification freq. and filtering.
+% ploteig => plots horizontal eigenvalues (Ueig)
+% plotfit => plots harmonic fit (pcolor and time-series)
+% plotsta => plots statistics
+% 
 % Created: Miguel Solano, May 31, 2020.
-
-loc = 2;
-locstr = num2str(loc); 
 
 %% Defaults
 warning('off');
 set(groot,'defaultLineLineWidth',1.5);
 set(0,'defaultAxesFontSize',6)
-
 
 %% Paths
 addpath /data/msolano/forOladeji % Matfiles (data)
@@ -19,7 +24,9 @@ addpath /data/msolano/toolbox/InternalModes
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/BSpline
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/Distributions
 
-dirout = '/data/msolano/figures/modes_hycom/';
+%% Input Options
+% Location (=1 North Atlantic, =2 South Pacific)
+loc = 2;  locstr = num2str(loc); 
 
 % plotting options (1=yes, 0=no)
 plotini = 0; % Stratification and filtering 
@@ -28,6 +35,7 @@ plotfit = 0; % Velocity and fit (pcolor and time series)
 plotsta = 1; % Statistics (R2 and S2)
 fntsz = 6;   % legend font size 
 
+dirout = '/data/msolano/figures/modes_hycom/';
 
 %% Load variables
 load(['profile_loc' locstr '.mat'])
