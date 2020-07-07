@@ -1,5 +1,5 @@
 clc; clear; close all; 
-%EIGEN_CONTS solved the EVP for constant stratification.  
+%EIGEN_CONTS solves the EVP for constant stratification.  
 % 
 % Created: Miguel Solano, May 14, 2020.
 
