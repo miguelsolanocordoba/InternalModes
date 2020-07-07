@@ -1,13 +1,26 @@
-function [k,L,C,Cg,Weig,Ueig] = compute_eigen(rho,zf,f,om)
-% [k,L,C,Cg,Weig,Ueig] = COMPUTE_EIGEN computes eigenvalues using Ashok & Bhaduria (2009) numerical scheme
-% input
-% rho represents the layer density vector (top to bottom) - mapped to layer centers
-% zf represents layer faces' depth vector (approaches -inf with increase with depth)
-% lat represents latitude
-% T reprents period of the internal tide
-% output
-% k,L,C,Cg,Weig and Ueig represents wavenumber,wavelength,phase speed,group
-% speed,vert. eigen (@layer interfaces) and hor. eigen functions respectively
+function [L,C,Cg,Weig,Ueig] = compute_eigen(rho,zf,f,om)
+%[k,L,C,Cg,Weig,Ueig] = COMPUTE_EIGEN computes eigenvalues using Ashok & Bhaduria (2009)
+%
+% S=COMPUTE_EIGEN(rho,zf,f,om) solves the omega-constant eigenvalue problem 
+% using the finite difference scheme from Ashok & Bhaduria, which solves for 
+% the vertical eigenfunction (Weig) at the cell faces of a non-uniform vertical 
+% grid and the horizontal eigenfunctions (Ueig) are computed as the dWeig/dz. 
+% 
+% INPUT: 
+% rho  := mean density at grid centers [1xN] 
+% zf   := grid points at grid faces [1xN+1]
+% f    := Coriolis frequency (constant)
+% om   := anglular frequency (constant)
+% 
+% OUTPUT
+% L    := wavelength 
+% C    := phase speed (celerity)
+% Cg   := group speed
+% Weig := vertical eigenvalues (at cell faces 'zf')
+% Ueig := horizontal eigenvalues (at cell centers 'zc')
+%
+% Created: Oladeji, S. June 2020
+% Modified: Solano, M. July 2020
 
 %om = 2*pi/(T*3600); % angular freq
 %f = 2*7.29*(10^-5)*sin(lat*pi/180); % coriolis freq
