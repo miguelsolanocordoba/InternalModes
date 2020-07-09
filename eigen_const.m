@@ -1,28 +1,28 @@
 clc; clear; close all; 
-%EIGEN_CONTS solves the EVP for constant stratification.  
-% 
+%EIGEN_CONST solves the EVP for constant stratification.  
+% EIGEN_CONST is an interactive script that solved and 
+% plots the solution to the Sturm-Liouville 
+%
 % Created: Miguel Solano, May 14, 2020.
 
-
-%% Initialize: paths, constants and variables
+%% Defaults
 set(groot,'defaultLineLineWidth',2);
 
 % Paths 
+addpath /data/msolano/Matlab/ocean_physics
 addpath /data/msolano/matfiles
 addpath /data/msolano/toolbox/InternalModes
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/BSpline
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/Distributions
 addpath /home/mbui/Temp/forMiguel/funcs/
-
 figpath = '/data/msolano/figures/modes_analytical/'; % figure bin
 
-% Constants
+%% Constants
 g = 9.81;                       % gravity 
 rho0 = 1025;                    % constant sea-water density  
 omega = 12.1408331767/24/3600;  % M2 frequency
+lat = 45;                       % latitude 
 
-%% Constant stratification 
-lat = 45;  % latitude 
 
 % Initialize profiles using pre-defined function
 % NOTE: rho and N2 are FUNCTION HANDLES (rho@(z))
@@ -32,14 +32,19 @@ lat = 45;  % latitude
 % Variables
 N0 = N2Func(0);   % Constant stratification  
 n = 2*64;     % Number of modes and vertical grid points
-z = linspace(zIn(1),zIn(2),n); % Output grid 
+zf = linspace(zIn(1),zIn(2),n); % Output grid 
+dz = diff(zf); 
+zc = zf(1:end-1) + dz/2;
+%zc = zf(1:end-1)/2 + zf(2:end)/2;
+nz = numel(zc); 
 H = zIn(1); 
 
 % Compute modes using Jeffrey's toolkit
-im = InternalModes(rhoFunc,zIn,z,lat); %,...
+imf = InternalModes(rhoFunc,zIn,zf,lat); %,...
+imc = InternalModes(rhoFunc,zIn,zc,lat); %,...
        %   'nModes',n,'method','finiteDifference'); 
 
-f =  im.f0;  %  Coriolis frequency 
+f =  imf.f0;  %  Coriolis frequency 
 
 % Plot density 
 plotf = input('Plot density? Y/N [N]','s'); 
@@ -56,12 +61,13 @@ end
 %Nb = N0*ones(size(z));
 %[~,~,~,Weig,Ueig] = sturm_liouville_hyd_normalize(omega,Nb,dz,f);
 
-N2 = N2Func(z); 
-dz = diff(z)'; 
-[Weig,Ueig] = comp_eigen_ola(dz,N2,f,omega); 
+N2 = N2Func(zc); 
+rho = rhoFunc(zc); 
+[~,~,~,Weig,Ueig] = compute_eigen(rho',zf',f,omega); 
+%[Weig,Ueig] = comp_eigen_ola(dz,N2,f,omega); 
 
 % Plot eigenvalues
-zc = z(1:end-1) + diff(z)/2;
+zc2 = zf(1:end-1) + diff(zf)/2;
 %N =  numel(zf); 
 %AA = repmat(-sum(Ueig.^2.*dz,1)./H,[N 1]).^(1/2); 
 %normU = max(max(abs(Ueig))); 
@@ -77,7 +83,7 @@ if plotf=='Y'
    xlabel('U_{eig}'); ylabel('Depth [m]')
    
    subplot(122)
-   plot(Weig(:,1:5),z)
+   plot(Weig(:,1:5),zf)
    title('Vertical Eigenvalues')
    xlabel('W_{eig}'); ylabel('Depth [m]')
    legend('n=1','n=2','n=3','n=4','n=5','Location','NorthEast')
@@ -89,17 +95,9 @@ end
 %[UeigJ,~,~,~] = im.ModesAtFrequency(omega); 
 
 im.normalization = 'wMax'; 
-[~,WeigJ,~,~] = im.ModesAtFrequency(omega); 
+[~,WeigJ,~,~] = imf.ModesAtFrequency(omega); 
+UeigJ = compute_ueig(Weig,dz'); 
 
-H = nansum(dz); N = numel(dz); 
-%dW2 = WeigJ(2:end,:) - WeigJ(1:end-1,:); 
-dW2 = diff(WeigJ); 
-dzu = repmat(dz,[1,size(dz,1)+1]); 
-Ueig1 = dW2./dzu; 
-AA = repmat(sum(Ueig1.^2.*dzu,1)./H,[N 1]).^(1/2); 
-AA(AA==0) = Inf; 
-UeigJ = Ueig1./AA; 
-UeigJ(:,UeigJ(N,:)<0) = -UeigJ(:,UeigJ(N,:)<0);  
 
 % Plot eigenvalues
 plotf = input('Plot Jeffs modes? Y/N [N]','s'); 
@@ -112,7 +110,7 @@ if plotf=='Y'
    legend('n=1','n=2','n=3','n=4','n=5','Location','NorthWest')
    
    subplot(122)
-   plot(WeigJ(:,1:5),z)
+   plot(WeigJ(:,1:5),zf)
    title('Vertical Eigenvalues')
    xlabel('W_{eig}'); ylabel('Depth [m]')
    legend('n=1','n=2','n=3','n=4','n=5','Location','NorthEast')
@@ -132,9 +130,9 @@ if plotf=='Y'
    xlabel('U_{eig}'); ylabel('Depth [m]')
    
    subplot(122)
-   plot(WeigJ(:,1:5),z); hold on
+   plot(WeigJ(:,1:5),zf); hold on
    %plot(Weig(:,2:6)./normW,flipud(zf'),'+k','MarkerSize',2)
-   plot(Weig(:,1:5),z,'+k','MarkerSize',2)
+   plot(Weig(:,1:5),zf,'+k','MarkerSize',2)
    title('Vertical Eigenvalues')
    xlabel('W_{eig}'); ylabel('Depth [m]')
    legend('n=1','n=2','n=3','n=4','n=5','Location','NorthEast')
