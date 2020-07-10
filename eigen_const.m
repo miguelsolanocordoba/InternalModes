@@ -62,20 +62,20 @@ Ueig = compute_ueig(Weig,dz');
 
 
 %% Maarten (sturm_liouville_hyd_normalize.m) ; 
-[~,~,~,WeigM,UeigM] = sturm_liouville_hyd_normalize(omega,N0*ones(size(zf)),dz(1),f);
+[CM,CgM,LM,WeigM,UeigM] = sturm_liouville_hyd_normalize(omega,N0*ones(size(zf)),dz(1),f);
 WeigM = WeigM/(max(max(WeigM)));
 
 %% Oladeji
 N2 = N2Func(zc); 
 rho = rhoFunc(zc); 
-[~,~,~,WeigO,UeigO] = compute_eigen(rho',zf',f,omega); 
+[CO,CgO,LO,WeigO,UeigO] = compute_eigen(rho',zf',f,omega); 
 
 %% Jeffrey (InternalModes.m)
 %imc.normalization = 'uMax'; 
 %[UeigJ,~,~,~] = imc.ModesAtFrequency(omega); 
 
 imf.normalization = 'wMax'; 
-[~,WeigJ,~,~] = imf.ModesAtFrequency(omega); 
+[~,WeigJ,h,k] = imf.ModesAtFrequency(omega); 
 UeigJ = compute_ueig(WeigJ,dz'); 
 umax = max(UeigJ(2,:)); 
 
@@ -132,6 +132,17 @@ title('Vertical Eigenvalues')
 xlabel('W_{eig}'); ylabel('Depth [m]')
 %legend('n=1','n=2','n=3','n=4','n=5','Location','NorthEast')
 print('const_eigen_jeff.png','-r300','-dpng') 
+
+
+% Compare wave-lengths 
+figure
+plot(1:5,2*pi./k(1:5)/1000); hold on 
+plot(1:5,LO(1:5)'/1000); 
+title('Wave-length (L)') 
+xlabel('Mode'); ylabel('L [km]'); 
+xticks(1:5,{'1','2','3','4','5'})
+legend('Jeff','Ola')
+print('L.png','-r300','-dpng')
 
 
 % Move all figures to /data

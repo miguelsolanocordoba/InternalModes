@@ -1,5 +1,5 @@
-function [L,C,Cg,Weig,Ueig] = compute_eigen(rho,zf,f,om)
-%[k,L,C,Cg,Weig,Ueig] = COMPUTE_EIGEN computes eigenvalues using Ashok & Bhaduria (2009)
+function [C,Cg,L,Weig,Ueig] = compute_eigen(rho,zf,f,om)
+%[C,Cg,L,Weig,Ueig] = COMPUTE_EIGEN computes eigenvalues using Ashok & Bhaduria (2009)
 %
 % S=COMPUTE_EIGEN(rho,zf,f,om) solves the omega-constant eigenvalue problem 
 % using the finite difference scheme from Ashok & Bhaduria, which solves for 

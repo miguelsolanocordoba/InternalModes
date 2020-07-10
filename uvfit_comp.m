@@ -29,9 +29,9 @@ addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/Distributions
 loc = 2;  locstr = num2str(loc); 
 
 % plotting options (1=yes, 0=no)
-plotini = 0; % Stratification and filtering 
-ploteig = 0; % Eigenvalues (Ueig,Weig) 
-plotfit = 0; % Velocity and fit (pcolor and time series)
+plotini = 1; % Stratification and filtering 
+ploteig = 1; % Eigenvalues (Ueig,Weig) 
+plotfit = 1; % Velocity and fit (pcolor and time series)
 plotsta = 1; % Statistics (R2 and S2)
 fntsz = 6;   % legend font size 
 
