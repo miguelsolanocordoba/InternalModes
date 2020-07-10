@@ -36,7 +36,7 @@ zf = linspace(zIn(1),zIn(2),n); % Output grid
 dz = diff(zf); 
 zc = zf(1:end-1) + dz/2;
 nz = numel(zc); 
-H = zIn(1); 
+H = nansum(dz);
 
 % Compute modes using Jeffrey's toolkit
 imf = InternalModes(rhoFunc,zIn,zf,lat); %,...
@@ -52,6 +52,15 @@ text(1035,-1000,['N_0 = ' num2str(N0)])
 print('const_rho.png','-r300','-dpng') 
 
 %% Compute Eigenfunctions
+% Analytical solutions 
+Weig = zeros(nz+1,nz+1); 
+Ueig = zeros(nz,nz); 
+for i = 1:nz  % loop over nmodes=nz;
+    Weig(:,i) = sin(zf*pi*i/H); 
+end
+Ueig = compute_ueig(Weig,dz');
+
+
 %% Maarten (sturm_liouville_hyd_normalize.m) ; 
 [~,~,~,WeigM,UeigM] = sturm_liouville_hyd_normalize(omega,N0*ones(size(zf)),dz(1),f);
 WeigM = WeigM/(max(max(WeigM)));
@@ -75,12 +84,14 @@ umax = max(UeigJ(2,:));
 % Oladeji
 figure 
 subplot(121)
-plot(UeigO(:,1:5),zc)
+plot(UeigO(:,1:5),zc); hold on
+plot(Ueig(:,1:5),zc,'+k','MarkerSize',2);
 title('Horizontal Eigenvalues')
 xlabel('U_{eig}'); ylabel('Depth [m]'); xlim([-umax umax])
 
 subplot(122)
-plot(WeigO(:,1:5),zf)
+plot(WeigO(:,1:5),zf); hold on
+plot(Weig(:,1:5),zf,'+k','MarkerSize',2);
 title('Vertical Eigenvalues')
 xlabel('W_{eig}'); ylabel('Depth [m]')
 %legend('n=1','n=2','n=3','n=4','n=5','Location','NorthEast')
@@ -90,13 +101,15 @@ print('const_eigen_ola.png','-r300','-dpng')
 % Maarten 
 figure 
 subplot(121)
-plot(UeigM(:,2:6),fliplr(zc))
+plot(UeigM(:,2:6),fliplr(zc)); hold on
+plot(Ueig(:,1:5),zc,'+k','MarkerSize',2);
 title('Horizontal Eigenvalues')
 xlabel('U_{eig}'); ylabel('Depth [m]'); xlim([-umax umax]) 
 %legend('n=1','n=2','n=3','n=4','n=5','Location','NorthWest')
    
 subplot(122)
-plot(-WeigM(:,2:6),fliplr(zc))
+plot(-WeigM(:,2:6),fliplr(zc)); hold on
+plot(Weig(:,1:5),zf,'+k','MarkerSize',2);
 title('Vertical Eigenvalues')
 xlabel('W_{eig}'); ylabel('Depth [m]')
 %legend('n=1','n=2','n=3','n=4','n=5','Location','NorthEast')
@@ -106,34 +119,19 @@ print('const_eigen_maar.png','-r300','-dpng')
 % Jeffrey Early  
 figure 
 subplot(121)
-plot(UeigJ(:,1:5),zc)
+plot(UeigJ(:,1:5),zc); hold on
+plot(Ueig(:,1:5),zc,'+k','MarkerSize',2);
 title('Horizontal Eigenvalues')
 xlabel('U_{eig}'); ylabel('Depth [m]'); xlim([-umax umax])
 %legend('n=1','n=2','n=3','n=4','n=5','Location','NorthWest')
    
 subplot(122)
-plot(WeigJ(:,1:5),zf)
+plot(WeigJ(:,1:5),zf); hold on
+plot(Weig(:,1:5),zf,'+k','MarkerSize',2);
 title('Vertical Eigenvalues')
 xlabel('W_{eig}'); ylabel('Depth [m]')
 %legend('n=1','n=2','n=3','n=4','n=5','Location','NorthEast')
 print('const_eigen_jeff.png','-r300','-dpng') 
-
-
-% Comparison (Maar vs Jeff)
-figure 
-subplot(121)
-plot(UeigM(:,2:6),fliplr(zc)); hold on
-plot(UeigJ(:,1:5),zc,'+k','MarkerSize',2)
-title('Horizontal Eigenvalues')
-xlabel('U_{eig}'); ylabel('Depth [m]'); xlim([-umax umax])
-
-subplot(122)
-plot(-WeigM(:,2:6),fliplr(zc)); hold on
-plot(WeigJ(:,1:5),zf,'+k','MarkerSize',2)
-title('Vertical Eigenvalues')
-xlabel('W_{eig}'); ylabel('Depth [m]')
-%legend('n=1','n=2','n=3','n=4','n=5','Location','NorthEast')
-print('const_eigen_comp.png','-r300','-dpng')
 
 
 % Move all figures to /data
