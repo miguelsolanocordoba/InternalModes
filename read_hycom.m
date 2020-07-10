@@ -1,5 +1,5 @@
 clear; clc; close all
-%%NISKINE_SAVEPROF saves HYCOM profiles for use with InternalModes
+%%PACIFIC_PFIT Computes wavelength and pfit statistics in a tile
 % 
 % Created: June 22, 2020 by M. Solano 
 
@@ -8,17 +8,13 @@ IEEE = 'ieee-be';
 addpath /data/msolano/Matlab
 
 %% Experiment and tile number 
-% loc1 > runnum=221;  blki=27; blkj=45; a=100; b=75;
-% loc2 > runnum=190;  blki=15; blkj=25; a=40;  b=40;
-% loc2 > runnum=190;  blki=15; blkj=25; a=40;  b=40;
+% loc1 > runnum=221;  blki=27; blkj=45;
+% loc2 > runnum=190;  blki=15; blkj=25; 
 
 runnum = 190;
 runnumstr = num2str(runnum);
 blki=15;
 blkj=25;
-
-% Output point 
-a = 40; b = 40; 
 
 % Directories
 %dirin = '/data2/mbui/for_keshav/tiles/'; % loc1
@@ -26,7 +22,7 @@ dirin = '/data2/msolano/forEmanuel/hycom/GLBc0.04/expt_19.0/';
 dirout = '/data/msolano/forOladeji/';
 saveflag = 0;
 
-fprintf('*** Running niskine_saveprof ***\n')
+fprintf('*** Running pacific_pfit ***\n')
 fprintf('Input directory: %s\n',dirin)
 fprintf('Output directory: %s\n',dirout)
 fprintf('iTile = %d\n',blki)
@@ -41,10 +37,10 @@ latfile = [dirin 'griddata/plat_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
 
 % Variables 
-fname1 = [dirin 'u_iso/u_' num2str(runnum) '_blk_' ...
-           num2str(blki) '_' num2str(blkj) '.BinF'];
-fname2 = [dirin 'v_iso/v_' num2str(runnum) '_blk_' ...
-           num2str(blki) '_' num2str(blkj) '.BinF'];
+%fname1 = [dirin 'u_iso/u_' num2str(runnum) '_blk_' ...
+%           num2str(blki) '_' num2str(blkj) '.BinF'];
+%fname2 = [dirin 'v_iso/v_' num2str(runnum) '_blk_' ...
+%           num2str(blki) '_' num2str(blkj) '.BinF'];
 fname3 = [dirin 'thknss/thknss_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
 fname4 = [dirin 'sig/sig_' num2str(runnum) '_blk_' ...
@@ -105,8 +101,8 @@ for i=1:nt
         alldata3 = fread(fid3,lenrec2,'single');
         alldata4 = fread(fid4,lenrec2,'single');
         
-        uiso1(:,:,k,i)   = permute(reshape(alldata1(2:end-1),[nxb nyb]),[2 1]);
-        viso1(:,:,k,i)   = permute(reshape(alldata2(2:end-1),[nxb nyb]),[2 1]);
+%        uiso1(:,:,k,i)   = permute(reshape(alldata1(2:end-1),[nxb nyb]),[2 1]);
+%        viso1(:,:,k,i)   = permute(reshape(alldata2(2:end-1),[nxb nyb]),[2 1]);
         thknss1(:,:,k,i) = permute(reshape(alldata3(2:end-1),[nxb nyb]),[2 1]);
         sig1(:,:,k,i)    = permute(reshape(alldata4(2:end-1),[nxb nyb]),[2 1]);
         
@@ -169,12 +165,5 @@ end
 
 % Save into profile structure 
 fprintf('\nSaving profile...\n') 
-profile = struct('latitude',lat,'longitude',lon,'depth',depth,...
-                 'uiso',uiso,'viso',viso,'ufilt',ufilt,'vfilt',vfilt,...
-		 'ufiltint',ufiltint,'vfiltint',vfiltint,'rho',rho,...
-		 'zc',zc,'zf_mean',zf_mean,...
-                 'zc_mean',zc_mean,'rho_mean',rho_mean)
 
-save([dirout 'profile_loc2.mat'],'profile','-v7.3');
-
-fprintf('SUCCESS!!!\nProfile saved to: %s\n',dirout)
+fprintf('Done!\nFigures moved to: %s\n',dirout)
