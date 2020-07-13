@@ -1,7 +1,17 @@
-clear; clc; close all
-%%PACIFIC_PFIT Computes wavelength and pfit statistics in a tile
+function hycom = read_hycom()
+%%READ_HYCOM reads in HYCOM's output (.BinF)
+% HYCOM = READ_HYCOM reads HYCOM binaries (.BinF) and saves output 
+% into a Matlab structure:
+%
+% hycom.lon = lon;     % longitude 
+% hycom.lat = lat;     % latitude 
+% hycom.h   = depth;   % depth 
+% hycom.dz  = thknss;  % layer thickness
+% hycom.uiso = uiso;   % baroclinic velocity (u) 
+% hycom.viso = viso;   % baroclinic velocity (v) 
+% hycom.rho = sig;     % density  
 % 
-% Created: June 22, 2020 by M. Solano 
+% Created: July 10, 2020 by M. Solano 
 
 % Format 
 IEEE = 'ieee-be';
@@ -20,9 +30,8 @@ blkj=25;
 %dirin = '/data2/mbui/for_keshav/tiles/'; % loc1
 dirin = '/data2/msolano/forEmanuel/hycom/GLBc0.04/expt_19.0/'; 
 dirout = '/data/msolano/forOladeji/';
-saveflag = 0;
 
-fprintf('*** Running pacific_pfit ***\n')
+fprintf('\nReading HYCOM files (read_hycom)\n')
 fprintf('Input directory: %s\n',dirin)
 fprintf('Output directory: %s\n',dirout)
 fprintf('iTile = %d\n',blki)
@@ -37,10 +46,10 @@ latfile = [dirin 'griddata/plat_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
 
 % Variables 
-%fname1 = [dirin 'u_iso/u_' num2str(runnum) '_blk_' ...
-%           num2str(blki) '_' num2str(blkj) '.BinF'];
-%fname2 = [dirin 'v_iso/v_' num2str(runnum) '_blk_' ...
-%           num2str(blki) '_' num2str(blkj) '.BinF'];
+fname1 = [dirin 'u_iso/u_' num2str(runnum) '_blk_' ...
+           num2str(blki) '_' num2str(blkj) '.BinF'];
+fname2 = [dirin 'v_iso/v_' num2str(runnum) '_blk_' ...
+           num2str(blki) '_' num2str(blkj) '.BinF'];
 fname3 = [dirin 'thknss/thknss_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
 fname4 = [dirin 'sig/sig_' num2str(runnum) '_blk_' ...
@@ -66,11 +75,11 @@ depdata = fread(fiddep,lenrec2,'single');
 londata = fread(fidlon,lenrec2,'single');
 latdata = fread(fidlat,lenrec2,'single');
 
-lon1 = []; lat1 = []; depth1 = [];
+lon = []; lat = []; depth = [];
 
-depth1(:,:) = permute(reshape(depdata(2:end-1),[nxb nyb]),[2 1]);
-lon1(:,:) = permute(reshape(londata(2:end-1),[nxb nyb]),[2 1]);
-lat1(:,:) = permute(reshape(latdata(2:end-1),[nxb nyb]),[2 1]);
+depth(:,:) = permute(reshape(depdata(2:end-1),[nxb nyb]),[2 1]);
+lon(:,:) = permute(reshape(londata(2:end-1),[nxb nyb]),[2 1]);
+lat(:,:) = permute(reshape(latdata(2:end-1),[nxb nyb]),[2 1]);
 
 fclose(fiddep);
 fclose(fidlon);
@@ -84,13 +93,13 @@ fid3 = fopen(fname3,'r',IEEE);
 fid4 = fopen(fname4,'r',IEEE);
 
 %% Read variables: u_iso, v_iso, sig, thknss
-uiso1 = [];
-viso1 = [];
-thknss1 = [];
-sig1 = [];
+uiso = [];
+viso = [];
+thknss = [];
+sig = [];
 
 % extract layer thickness, u,v in space and time
-fprintf('\nExtracing variables...\n') 
+fprintf('\nReading HYCOM output: \n') 
 for i=1:nt
     
     fprintf('%d/%d\n',i,nt)	
@@ -101,69 +110,31 @@ for i=1:nt
         alldata3 = fread(fid3,lenrec2,'single');
         alldata4 = fread(fid4,lenrec2,'single');
         
-%        uiso1(:,:,k,i)   = permute(reshape(alldata1(2:end-1),[nxb nyb]),[2 1]);
-%        viso1(:,:,k,i)   = permute(reshape(alldata2(2:end-1),[nxb nyb]),[2 1]);
-        thknss1(:,:,k,i) = permute(reshape(alldata3(2:end-1),[nxb nyb]),[2 1]);
-        sig1(:,:,k,i)    = permute(reshape(alldata4(2:end-1),[nxb nyb]),[2 1]);
+        uiso(:,:,k,i)   = permute(reshape(alldata1(2:end-1),[nxb nyb]),[2 1]);
+        viso(:,:,k,i)   = permute(reshape(alldata2(2:end-1),[nxb nyb]),[2 1]);
+        thknss(:,:,k,i) = permute(reshape(alldata3(2:end-1),[nxb nyb]),[2 1]);
+        sig(:,:,k,i)    = permute(reshape(alldata4(2:end-1),[nxb nyb]),[2 1]);
         
     end
 end
     
-fprintf('\nClosing files...\n')
+fprintf('\nDone!\n')
 fclose(fid1);
 fclose(fid2);
 fclose(fid3);
 fclose(fid4);
 
+% Don't save halos (nbf) 
+b = [nbf+1:nx+nbf]; 
+a = [nbf+1:ny+nbf]; 
 
-%% Save output for use in InternalModes
-fprintf('\nPreperaring output...\n') 
-% Dimensions
-[nx,ny,nz,nt] = size(uiso1); 
+%% Save output to hycom (structure) 
+hycom.lon = lon(a,b);         % longitude 
+hycom.lat = lat(a,b);         % latitude 
+hycom.h   = depth(a,b);       % depth 
+hycom.dz  = thknss(a,b,:,:);  % layer thickness
+hycom.uiso = uiso(a,b,:,:);   % baroclinic velocity (u) 
+hycom.viso = viso(a,b,:,:);   % baroclinic velocity (v) 
+hycom.rho = sig(a,b,:,:);     % density  
 
-
-% Grid data 
-depth = depth1(a,b); clear depth1
-lon = lon1(a,b);     clear lon1
-lat = lat1(a,b);     clear lat1
-
-% Compute cell centers(zc) and faces(zf)
-zf1 = zeros(nz+1,nt); 
-zc1 = zeros(nz,nt); 
-
-for i = 1:nt
-    zf1(2:end,i) = squeeze(cumsum(thknss1(a,b,:,i),3)); 
-    zc1(:,i) = 0.5.*(zf1(1:nz,i) + zf1(2:nz+1,i));
-end
-
-% if layer thickness < 0.1m, do not save! 
-thk0=diff(zf1(:,1))>0.1;
-nz = sum(thk0);  % number of layers > 0.1m
-
-zf = -flipud(zf1(1:nz+1,:)); clear zf1;  
-zc = -flipud(zc1(1:nz,:)); clear zc1
-
-zf_mean = mean(zf,2); % time-mean cell face
-zc_mean = mean(zc,2); % time-mean cell center
-
-% Save main variables (u_iso,v_iso,zf,zc)
-uiso = flipud(squeeze(uiso1(a,b,1:nz,:)));            % Velocity (u) 
-viso = flipud(squeeze(viso1(a,b,1:nz,:)));            % Velocity (v) 
-rho = flipud(squeeze(sig1(a,b,1:nz,:)));              % Density 
-rho_mean = flipud(squeeze(mean(sig1(a,b,1:nz,:),4))); % Time-mean density 
-
-% Filter and interpolate baroclinic velocities
-[ufilt,vfilt] = filter_uviso(uiso,viso); % Band-pass velocities
-
-ufiltint = zeros(size(ufilt)); 
-vfiltint = zeros(size(vfilt)); 
-for i=1:nt 
-    ufiltint(:,i) = interp1(zc(:,i),ufilt(:,i),zc_mean,'linear','extrap'); 
-    vfiltint(:,i) = interp1(zc(:,i),vfilt(:,i),zc_mean,'linear','extrap'); 
-end
-
-
-% Save into profile structure 
-fprintf('\nSaving profile...\n') 
-
-fprintf('Done!\nFigures moved to: %s\n',dirout)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% EoF %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
