@@ -3,13 +3,14 @@ function hycom = read_hycom()
 % HYCOM = READ_HYCOM reads HYCOM binaries (.BinF) and saves output 
 % into a Matlab structure:
 %
-% hycom.lon = lon;     % longitude 
-% hycom.lat = lat;     % latitude 
-% hycom.h   = depth;   % depth 
-% hycom.dz  = thknss;  % layer thickness
-% hycom.uiso = uiso;   % baroclinic velocity (u) 
-% hycom.viso = viso;   % baroclinic velocity (v) 
-% hycom.rho = sig;     % density  
+% hycom.time  % time (in datenum format)
+% hycom.lon   % longitude 
+% hycom.lat   % latitude 
+% hycom.h     % depth 
+% hycom.dz    % layer thickness
+% hycom.uiso  % baroclinic velocity (u) 
+% hycom.viso  % baroclinic velocity (v) 
+% hycom.rho   % density  
 % 
 % Created: July 10, 2020 by M. Solano 
 
@@ -29,11 +30,9 @@ blkj=25;
 % Directories
 %dirin = '/data2/mbui/for_keshav/tiles/'; % loc1
 dirin = '/data2/msolano/forEmanuel/hycom/GLBc0.04/expt_19.0/'; 
-dirout = '/data/msolano/forOladeji/';
 
 fprintf('\nReading HYCOM files (read_hycom)\n')
 fprintf('Input directory: %s\n',dirin)
-fprintf('Output directory: %s\n',dirout)
 fprintf('iTile = %d\n',blki)
 fprintf('jTile = %d\n',blkj)
 
@@ -118,7 +117,7 @@ for i=1:nt
     end
 end
     
-fprintf('\nDone!\n')
+fprintf('\nDone reading variables!\n')
 fclose(fid1);
 fclose(fid2);
 fclose(fid3);
@@ -129,6 +128,7 @@ b = [nbf+1:nx+nbf];
 a = [nbf+1:ny+nbf]; 
 
 %% Save output to hycom (structure) 
+hycom.time = t;               % time (in datenum format)
 hycom.lon = lon(a,b);         % longitude 
 hycom.lat = lat(a,b);         % latitude 
 hycom.h   = depth(a,b);       % depth 
