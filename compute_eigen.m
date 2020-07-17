@@ -1,5 +1,5 @@
-function [k,C,Cg,L,Weig,Ueig] = compute_eigen(rho,zf,f,om)
-%[C,Cg,L,Weig,Ueig] = COMPUTE_EIGEN computes eigenvalues using Ashok & Bhaduria (2009)
+function S = compute_eigen(rho,zf,f,om)
+%S = COMPUTE_EIGEN computes eigenvalues using Ashok & Bhaduria (2009)
 %
 % S=COMPUTE_EIGEN(rho,zf,f,om) solves the omega-constant eigenvalue problem 
 % using the finite difference scheme from Ashok & Bhaduria, which solves for 
@@ -13,11 +13,11 @@ function [k,C,Cg,L,Weig,Ueig] = compute_eigen(rho,zf,f,om)
 % om   := anglular frequency (constant)
 % 
 % OUTPUT
-% L    := wavelength 
-% C    := phase speed (celerity)
-% Cg   := group speed
-% Weig := vertical eigenvalues (at cell faces 'zf')
-% Ueig := horizontal eigenvalues (at cell centers 'zc')
+% S.L    := wavelength 
+% S.C    := phase speed (celerity)
+% S.Cg   := group speed
+% S.Weig := vertical eigenvalues (at cell faces 'zf')
+% S.Ueig := horizontal eigenvalues (at cell centers 'zc')
 %
 % Created: Oladeji, S. June 2020
 % Modified: Solano, M. July 2020
@@ -78,4 +78,5 @@ Ueig2(:,Ueig2(N,:)<0) = -Ueig2(:,Ueig2(N,:)<0);
 Ueig = Ueig2;
 Weig = W2;
 
-save('test.mat','A','B')
+%% Save output in a structure
+S = struct('k',k,'L',L,'C',C,'Cg',Cg,'W',Weig,'U','Ueig'); 

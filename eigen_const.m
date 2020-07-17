@@ -30,7 +30,7 @@ lat = 45;                       % latitude
      InternalModes.StratificationProfileWithName('constant');
 
 % Variables
-N0 = N2Func(0);   % Constant stratification  
+N0 = N2Func(0);   % Constant stratification NOTE: N0 = N^2 !!!
 n = 2*64;     % Number of modes and vertical grid points
 zf = linspace(zIn(1),zIn(2),n); % Output grid 
 dz = diff(zf); 
@@ -51,18 +51,31 @@ xlabel('\rho'); ylabel('Depth[m]')
 text(1035,-1000,['N_0 = ' num2str(N0)])
 print('const_rho.png','-r300','-dpng') 
 
-%% Compute Eigenfunctions
-% Analytical solutions 
-Weig = zeros(nz+1,nz+1); 
+%% EVP: Analytical solution to non-hydrostatic with uniform stratification
+% Eigenfunctions
+% nmodes := # of modes solved
+nmodes = nz + 1; % number of modes 
+Weig = zeros(nz+1,nmodes); % Weig(1)=0 [bottom BC]; Weig(end)=0 [surface BC]
 Ueig = zeros(nz,nz); 
-for i = 1:nz  % loop over nmodes=nz;
-    Weig(:,i) = sin(zf*pi*i/H); 
-end
-Ueig = compute_ueig(Weig,dz');
 
+% Weig = sin(pi*z*nn/H) for nn=1,2,3,..,nmodes
+% Ueig = d(Weig)/dz (Horizontal eigenfunction at cell centers)
+nn = [1:nz+1]; % modes nn = 1,2,3,...,nmodes 
+Weig(2:end-1,:) = sin(pi*zf(2:end-1)'*nn/H); 
+Ueig = compute_ueig(Weig,dz'); % see compute_ueig.m for details
+
+% Eigenvalues
+alpha = (omega^2-f^2)/(N0-omega^2);
+lambda = pi*nn/H; 
+
+kn = lambda*sqrt(alpha); % wave-number 
+L = 2*pi./kn;            % wave-length 
+C = omega./kn;           % phase speed
+Cg = C.^2.*kn./omega;    % group speed
 
 %% Maarten (sturm_liouville_hyd_normalize.m) ; 
-[CM,CgM,LM,WeigM,UeigM] = sturm_liouville_hyd_normalize(omega,N0*ones(size(zf)),dz(1),f);
+N2M = repmat(sqrt(N0),1,nz+1); 
+[CM,CgM,LM,WeigM,UeigM] = sturm_liouville_hyd_normalize(omega,N2M,dz(1),f);
 WeigM = WeigM/(max(max(WeigM)));
 
 %% Oladeji
@@ -80,8 +93,10 @@ UeigJ = compute_ueig(WeigJ,dz');
 umax = max(UeigJ(2,:)); 
 
 
-return
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+nmodes = 5;    % number of modes to plot
+
+%% EIGENFUNCTIONS
 % Oladeji
 figure 
 subplot(121)
@@ -135,7 +150,11 @@ xlabel('W_{eig}'); ylabel('Depth [m]')
 print('const_eigen_jeff.png','-r300','-dpng') 
 
 
+%% EIGENVALUES
 % Compare wave-lengths 
+figure
+plot(
+
 figure
 plot(1:5,2*pi./k(1:5)/1000); hold on 
 plot(1:5,LO(1:5)'/1000); 
