@@ -60,7 +60,8 @@ k = abs(sqrt(diag(k2)));
 W1 = W1(:,Is);
 C  = om./k;
 L  = 2*pi./k;
-Cg = sqrt((om^2-f^2)./(k.^2));
+Cg = (om^2-f^2)./(om*k); 
+%Cg = sqrt((om^2-f^2)./(k.^2));
 
 %% Get W structure functions
 W2 = [zeros(1,ll); W1; zeros(1,ll)];    % W at cell faces
@@ -79,4 +80,4 @@ Ueig = Ueig2;
 Weig = W2;
 
 %% Save output in a structure
-S = struct('k',k,'L',L,'C',C,'Cg',Cg,'W',Weig,'U','Ueig'); 
+S = struct('k',k,'L',L,'C',C,'Cg',Cg,'W',Weig,'U',Ueig); 
