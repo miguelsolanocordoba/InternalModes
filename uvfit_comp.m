@@ -92,11 +92,13 @@ imU = InternalModes(rho_mean,zIn,zIn,lat,'method','finiteDifference',...)
 
 %% Compute eigenmodes
 % Case 1: compute Ueig from Weig (Early)
-[~,Weig1,~,~] = im.ModesAtFrequency(omega); % w-const EVP 
+[~,Weig1,h1,k1] = im.ModesAtFrequency(omega); % w-const EVP 
 Ueig1 = compute_ueig(Weig1,dz); % Normalized Ueig
+L1 = 2*pi./k1; 
+Cg1 = sqrt(g*h1); 
 
 % Case 2: compute Ueig directly (Early) 
-[UeigJ,~,~,~] = imU.ModesAtFrequency(omega); % w-const EVP 
+[UeigJ,~,h2,k2] = imU.ModesAtFrequency(omega); % w-const EVP 
 UeigJ(isnan(UeigJ))=0; AA=repmat(sum(UeigJ.^2.*dz,1)./H,[N 1]).^(1/2);
 AA(AA==0)=Inf; Ueig2=UeigJ./AA;
 Ueig2(:,Ueig2(N,:)<0)=-Ueig2(:,Ueig2(N,:)<0);
@@ -107,7 +109,7 @@ Ueig2(:,Ueig2(N,:)<0)=-Ueig2(:,Ueig2(N,:)<0);
 Ueig3 = Ueig1;
 
 % Case 4: compute Ueig from Weig (Oladeji) 
-[~,~,~,~,~,Ueig4] = comp_eigen_ola_old(rho_mean,zf,im.f0,omega); 
+[k4,L4,C4,Cg4,~,Ueig4] = comp_eigen_ola_old(rho_mean,zf,im.f0,omega); 
 
 % Case 5: compute Ueig directly (Oladeji) 
 [~,~,~,~,Ueig5] = comp_eigen_ola_new(rho_mean,zf,im.f0,omega); 
@@ -115,6 +117,7 @@ Ueig3 = Ueig1;
 % Case 6: Same as (5) but using ufiltint
 Ueig6 = Ueig5;
 
+return
 %% Mode fitting and statistics
 % Compute the fit
 nmodes = 5; 

@@ -80,19 +80,21 @@ for i = 1:10
     
         %% Compute eigenfunctions 
         % Oladeji
-        [C,Cg,L,~,~] = compute_eigen(rho_mean,zf_mean,f,omega);
+        [k,C,Cg,L,~,~] = compute_eigen(rho_mean,zf_mean,f,omega);
         CO(i,j,:) = C(1:5); 
         CgO(i,j,:) = Cg(1:5); 
 	LO(i,j,:) = L(1:5); 
         	
         % Early 
-        im = InternalModes(rhof_mean,zf_mean,zc_mean,hycom.lat(i,j)); %,...
+        im = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(i,j)); %,...
 	im.normalization = 'wMax';
-	im.method = 'finiteDifference'; 
+%	im.method = 'finiteDifference'; 
 %             'method','finiteDifference','orderOfAccuracy','4');
         [~,~,h,K] = im.ModesAtFrequency(omega); 
         CgE(i,j,:) = sqrt(g*h(1:5)); 
         LE(i,j,:) = 2*pi./K(1:5);
+	  
+	return
 
     end
 end
@@ -116,25 +118,25 @@ xlabel('longitude'); ylabel('latitude')
 cb = colorbar; %caxis([0 1000]) 
 
 subplot(323)
-pcolor(lon,lat,squeeze(LO(1:10,1:10,1))./1000); shading interp
+pcolor(lon,lat,squeeze(LO(1:10,1:10,2))./1000); shading interp
 title('Mode 2: wave-length (Oladeji)') 
 xlabel('longitude'); ylabel('latitude') 
 cb = colorbar; %caxis([0 1000]) 
 
 subplot(324)
-pcolor(lon,lat,squeeze(LE(1:10,1:10,1))./1000); shading interp
+pcolor(lon,lat,squeeze(LE(1:10,1:10,2))./1000); shading interp
 title('Mode 2: wave-length (Early)') 
 xlabel('longitude'); ylabel('latitude') 
 cb = colorbar; %caxis([0 1000]) 
 
 subplot(325)
-pcolor(lon,lat,squeeze(LO(1:10,1:10,1))./1000); shading interp
+pcolor(lon,lat,squeeze(LO(1:10,1:10,3))./1000); shading interp
 title('Mode 3: wave-length (Oladeji)') 
 xlabel('longitude'); ylabel('latitude') 
 cb = colorbar; %caxis([0 1000]) 
 
 subplot(326)
-pcolor(lon,lat,squeeze(LE(1:10,1:10,1))./1000); shading interp
+pcolor(lon,lat,squeeze(LE(1:10,1:10,3))./1000); shading interp
 title('Mode 3: wave-length (Early)') 
 xlabel('longitude'); ylabel('latitude') 
 cb = colorbar; %caxis([0 1000]) 

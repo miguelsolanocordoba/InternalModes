@@ -68,18 +68,19 @@ WeigM = WeigM/(max(max(WeigM)));
 %% Oladeji
 N2 = N2Func(zc); 
 rho = rhoFunc(zc); 
-[CO,CgO,LO,WeigO,UeigO] = compute_eigen(rho',zf',f,omega); 
+[kO,CO,CgO,LO,WeigO,UeigO] = compute_eigen(rho',zf',f,omega); 
 
 %% Jeffrey (InternalModes.m)
 %imc.normalization = 'uMax'; 
 %[UeigJ,~,~,~] = imc.ModesAtFrequency(omega); 
 
-imf.normalization = 'wMax'; 
+%imf.normalization = 'wMax'; 
 [~,WeigJ,h,k] = imf.ModesAtFrequency(omega); 
 UeigJ = compute_ueig(WeigJ,dz'); 
 umax = max(UeigJ(2,:)); 
 
 
+return
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Oladeji
 figure 

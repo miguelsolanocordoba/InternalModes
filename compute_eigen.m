@@ -1,4 +1,4 @@
-function [C,Cg,L,Weig,Ueig] = compute_eigen(rho,zf,f,om)
+function [k,C,Cg,L,Weig,Ueig] = compute_eigen(rho,zf,f,om)
 %[C,Cg,L,Weig,Ueig] = COMPUTE_EIGEN computes eigenvalues using Ashok & Bhaduria (2009)
 %
 % S=COMPUTE_EIGEN(rho,zf,f,om) solves the omega-constant eigenvalue problem 
@@ -78,3 +78,4 @@ Ueig2(:,Ueig2(N,:)<0) = -Ueig2(:,Ueig2(N,:)<0);
 Ueig = Ueig2;
 Weig = W2;
 
+save('test.mat','A','B')
