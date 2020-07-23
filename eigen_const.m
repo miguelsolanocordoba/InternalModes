@@ -72,14 +72,9 @@ lambda = pi*nn/H;
 kn = lambda*sqrt(alpha);                % wave-number 
 L = 2*pi./kn;                           % wave-length 
 C = (H*omega./(nn*pi)) * sqrt(1/alpha); % phase-speed
-Cg = (H./(nn*pi)) * (1/(omega*(N0-f^2))) * sqrt(omega^2-f^2) * (N0-omega^2)^(3/2);
+%Cg = (H./(nn*pi)) * (1/(omega*(N0-f^2))) * sqrt(omega^2-f^2) * (N0-omega^2)^(3/2);
+Cg = (H./(nn*pi)) * (1/(omega*(N0-f^2))) * sqrt(omega^2-f^2) * (N0)^(3/2);
 
-
-%Cg = sqrt((omega^2-f^2)./(kn.^2));    % group speed
-%Cg = C.^2.*kn./omega;    % group speed
-
-
-%C = omega./kn;           % phase speed
 
 %% Maarten (sturm_liouville_hyd_normalize.m) ; 
 N2M = repmat(sqrt(N0),1,nz+1); 
@@ -171,22 +166,24 @@ print('const_eigen_jeff.png','-r300','-dpng')
 % Compare wave-lengths 
 figure
 plot(n,kO(n),'b'); hold on
-plot(n,kM(n+1),'r'); 
+plot(n,kM(n),'r'); 
 plot(n,kJ(n),'g'); 
 plot(n,kn(n),'*k'); 
-title('Wave-nuber (k)') 
+title('Wavenumber (k)') 
 xlabel('Mode'); ylabel('[m^{-1}]'); 
 xticks(n,{'1','2','3','4','5'})
+legend('Oladeji','Maarten','Jeffrey','Analytical')
 print('k.png','-r300','-dpng')
 
 figure
 plot(n,LO(n),'b'); hold on
-plot(n,LM(n+1),'r'); 
+plot(n,LM(n),'r'); 
 plot(n,LJ(n),'g'); 
 plot(n,L(n),'*k'); 
-title('Wave-length (L)') 
+title('Wavelength (L)') 
 xlabel('Mode'); ylabel('[km]'); 
 xticks(n,{'1','2','3','4','5'})
+legend('Oladeji','Maarten','Jeffrey','Analytical')
 print('L.png','-r300','-dpng')
 
 figure
@@ -194,33 +191,35 @@ plot(n,CO(n),'b'); hold on
 plot(n,CM(n),'r'); 
 plot(n,CJ(n),'g'); 
 plot(n,C(n),'*k'); 
-title('Phase speed (C)') 
+title('Phasespeed (C)') 
 xlabel('Mode'); ylabel('[m/s]'); 
 xticks(n,{'1','2','3','4','5'})
+legend('Oladeji','Maarten','Jeffrey','Analytical')
 print('C.png','-r300','-dpng')
 
 figure
 plot(n,CgO(n),'b'); hold on
-plot(n,CgM(n+1),'r'); 
+plot(n,CgM(n),'r'); 
 plot(n,CgJ(n),'g'); 
 plot(n,Cg(n),'*k'); 
-title('Group speed (C_g)') 
+title('Groupspeed (C_g)') 
 xlabel('Mode'); ylabel('[m/s]'); 
 xticks(n,{'1','2','3','4','5'})
+legend('Oladeji','Maarten','Jeffrey','Analytical')
 print('Cg.png','-r300','-dpng')
 
 L(n)
-LO(n)'
+LO(n)'/1e4
 LM(n)'
 LJ(n)
 
 C(n)
-CO(n)'
+CO(n)'/1e4
 CM(n)'
 CJ(n)
 
 Cg(n)
-CgO(n)'
+CgO(n)'/1e4
 CgM(n)'
 CgJ(n)
 

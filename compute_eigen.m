@@ -53,14 +53,23 @@ A(i, 0+i) = -2*1/(dz(i)*dz(i+1));
 ll = size(A,1);
 
 % Solve the EVP
-[W1,k2] = eig(A,B);
 
-k = abs(sqrt(diag(k2)));
-[k,Is] = sort(k,'ascend');
+[W1,invCe2] = eig(A,B);
+Ce2 = 1./(diag(invCe2));
+Ce = sqrt(Ce2); [Ce,Is]=sort(Ce,'descend');
+k = abs(sqrt((om^2-f^2))./Ce);
 W1 = W1(:,Is);
 C  = om./k;
 L  = 2*pi./k;
-Cg = (om^2-f^2)./(om*k); 
+Cg = Ce.^2.*k/om;
+
+%[W1,k2] = eig(A,B);
+%k = abs(sqrt(diag(k2)));
+%[k,Is] = sort(k,'ascend');
+%W1 = W1(:,Is);
+%C  = om./k;
+%L  = 2*pi./k;
+%Cg = (om^2-f^2)./(om*k); 
 %Cg = sqrt((om^2-f^2)./(k.^2));
 
 %% Get W structure functions

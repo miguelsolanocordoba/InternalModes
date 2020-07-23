@@ -26,7 +26,7 @@ addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/Distributions
 
 %% Input Options
 % Location (=1 North Atlantic, =2 South Pacific)
-loc = 2;  locstr = num2str(loc); 
+loc = 1;  locstr = num2str(loc); 
 
 % plotting options (1=yes, 0=no)
 plotini = 1; % Stratification and filtering 
@@ -86,16 +86,21 @@ im = InternalModes(rhof_mean,zOut,zOut,lat,'method','finiteDifference',...
                    'orderOfAccuracy',4)
 imU = InternalModes(rho_mean,zIn,zIn,lat,'method','finiteDifference',...)
                    'orderOfAccuracy',4)
-
+f = im.f0; 
 % Compute perturbation pressure
 %pertp = comp_pertpress(profile.rho,dz); 
 
 %% Compute eigenmodes
 % Case 1: compute Ueig from Weig (Early)
-[~,Weig1,h1,k1] = im.ModesAtFrequency(omega); % w-const EVP 
+imWKB.normalization = 'uMax';
+[~,Weig1,h1,k] = imWKB.ModesAtFrequency(omega); % w-const EVP 
 Ueig1 = compute_ueig(Weig1,dz); % Normalized Ueig
+
+Ce1 = sqrt(g*h1); 
+k1 = abs(sqrt(omega^2-f^2)./Ce1);  
 L1 = 2*pi./k1; 
-Cg1 = sqrt(g*h1); 
+Cg1 = Ce1.^2.*k1./omega;
+Cg1 = sqrt((omega^2-f^2)./(k1.^2)); 
 
 % Case 2: compute Ueig directly (Early) 
 [UeigJ,~,h2,k2] = imU.ModesAtFrequency(omega); % w-const EVP 
@@ -109,13 +114,24 @@ Ueig2(:,Ueig2(N,:)<0)=-Ueig2(:,Ueig2(N,:)<0);
 Ueig3 = Ueig1;
 
 % Case 4: compute Ueig from Weig (Oladeji) 
-[k4,L4,C4,Cg4,~,Ueig4] = comp_eigen_ola_old(rho_mean,zf,im.f0,omega); 
+%[k4,L4,C4,Cg4,~,Ueig4] = comp_eigen_ola_old(rho_mean,zf,im.f0,omega); 
+S = compute_eigen(rho_mean,zf,im.f0,omega); 
+L4 = S.L/1e4; 
+Cg4 = S.Cg/1e4;
 
 % Case 5: compute Ueig directly (Oladeji) 
 [~,~,~,~,Ueig5] = comp_eigen_ola_new(rho_mean,zf,im.f0,omega); 
 
 % Case 6: Same as (5) but using ufiltint
 Ueig6 = Ueig5;
+
+
+L1(1)
+L4(1)
+
+Cg1(1)
+Cg4(1)
+
 
 return
 %% Mode fitting and statistics
