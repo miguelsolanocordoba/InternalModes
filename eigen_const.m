@@ -1,7 +1,34 @@
 clc; clear; close all; warning off 
 %EIGEN_CONST solves the EVP for constant stratification.  
-% EIGEN_CONST is an interactive script that solved and 
-% plots the solution to the Sturm-Liouville 
+% EIGEN_CONST is solves the the omega-constant vertical mode
+% eigenvalue problem: 
+%
+% PDE: W'' + N^2/c_n^2 W = 0
+% BCs: W(0) = 0; W(H) = 0
+% 
+% Where the prime (') denotes derivative with respect to coordinate 
+% (z), which is z=0 at the surface and z=H at the bottom. N is the  
+% constant stratification frequency and c_n is the eigenspeed. 
+% 
+% c_n = sqrt(omega^2 - f^2)/k_n 
+% N = sqrt(-g/rho_0 rho'); 
+% 
+% where (rho) is the density, g is gravity and k_n is the wavenumber. 
+% Wave properties are computed as follows: 
+% 
+% L = 2*pi/k_n         % wave-length
+% C = omega/k_n        % phase speed
+% Cg= c_n^2*k_n/omega  % group speed
+%
+% Output: 
+% const_rho.png           % plots density/stratification 
+% comp_eigen_ola.png      % compares W from Oladeji-analytical 
+% comp_eigen_maar.png     % compares W from Maarten-analytical 
+% comp_eigen_jeffrey.png  % compares W from Jeffrey-analytical
+% k.png                   % plots O-M-J-analytical wavenumber
+% L.png                   % plots O-M-J-analytical wavelength
+% C.png                   % plots O-M-J-analytical phase speed
+% Cg.png                  % plots O-M-J-analytical group speed
 %
 % Created: Miguel Solano, May 14, 2020.
 
@@ -208,20 +235,24 @@ xticks(n,{'1','2','3','4','5'})
 legend('Oladeji','Maarten','Jeffrey','Analytical')
 print('Cg.png','-r300','-dpng')
 
-L(n)
-LO(n)'/1e4
-LM(n)'
-LJ(n)
+fprintf('\nSolutions:') 
+fprintf('\nMode 1 wavelength (L)')
+fprintf('\n(Analytical = %4.4f',L(1))
+fprintf('\n(Oladeji = %4.4f',LO(1))
+fprintf('\n(Maarten = %4.4f',LM(1))
+fprintf('\n(Jeffrey = %4.4f\n',LJ(1))
 
-C(n)
-CO(n)'/1e4
-CM(n)'
-CJ(n)
+fprintf('\nMode 1 group-speed (Cg)')
+%fprintf('\n(Analytical = %4.4f',CgO(1))
+fprintf('\n(Oladeji = %4.4f',CgO(1))
+fprintf('\n(Maarten = %4.4f',CgM(1))
+fprintf('\n(Jeffrey = %4.4f\n',CgJ(1))
 
-Cg(n)
-CgO(n)'/1e4
-CgM(n)'
-CgJ(n)
+fprintf('\nMode 1 phase-speed (C)')
+fprintf('\n(Analytical = %4.4f',C(1))
+fprintf('\n(Oladeji = %4.4f',CO(1))
+fprintf('\n(Maarten = %4.4f',CM(1))
+fprintf('\n(Jeffrey = %4.4f\n',CJ(1))
 
 % Move all figures to /data
 system(['mv *.png ' figpath]); 
