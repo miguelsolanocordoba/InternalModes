@@ -237,22 +237,22 @@ print('Cg.png','-r300','-dpng')
 
 fprintf('\nSolutions:') 
 fprintf('\nMode 1 wavelength (L)')
-fprintf('\n(Analytical = %4.4f',L(1))
-fprintf('\n(Oladeji = %4.4f',LO(1))
-fprintf('\n(Maarten = %4.4f',LM(1))
-fprintf('\n(Jeffrey = %4.4f\n',LJ(1))
+fprintf('\nAnalytical = %4.4f',L(1))
+fprintf('\nOladeji = %4.4f',LO(1))
+fprintf('\nMaarten = %4.4f',LM(1))
+fprintf('\nJeffrey = %4.4f\n',LJ(1))
 
 fprintf('\nMode 1 group-speed (Cg)')
 %fprintf('\n(Analytical = %4.4f',CgO(1))
-fprintf('\n(Oladeji = %4.4f',CgO(1))
-fprintf('\n(Maarten = %4.4f',CgM(1))
-fprintf('\n(Jeffrey = %4.4f\n',CgJ(1))
+fprintf('\nOladeji = %4.4f',CgO(1))
+fprintf('\nMaarten = %4.4f',CgM(1))
+fprintf('\nJeffrey = %4.4f\n',CgJ(1))
 
 fprintf('\nMode 1 phase-speed (C)')
-fprintf('\n(Analytical = %4.4f',C(1))
-fprintf('\n(Oladeji = %4.4f',CO(1))
-fprintf('\n(Maarten = %4.4f',CM(1))
-fprintf('\n(Jeffrey = %4.4f\n',CJ(1))
+fprintf('\nAnalytical = %4.4f',C(1))
+fprintf('\nOladeji = %4.4f',CO(1))
+fprintf('\nMaarten = %4.4f',CM(1))
+fprintf('\nJeffrey = %4.4f\n',CJ(1))
 
 % Move all figures to /data
 system(['mv *.png ' figpath]); 
