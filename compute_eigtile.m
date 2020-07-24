@@ -16,26 +16,30 @@ figpath = '/data/msolano/figures/test';
 %% Read HYCOM variables
 hycom = read_hycom(); 
 [nx,ny,nz,nt] = size(hycom.rho); 
+nx = 10; % over-ride x-size 
+ny = 10; % over-ride y-size
 
 % Constants
 g = 9.806;                      % gravity 
 omega = 12.1408331767/24/3600;  % M2 frequency
-%nfiles = nx*ny; 
-nfiles = 20*20;
+nfiles = nx*ny; 
 nmodes = 5; 
 
 % Variables to plot
+r2J = zeros(nx,ny,nmodes); 
+r2O = zeros(nx,ny,nmodes); 
 CO = zeros(nx,ny,nmodes); 
 CgO = zeros(nx,ny,nmodes); 
 LO = zeros(nx,ny,nmodes); 
-CE = zeros(nx,ny,nmodes); 
-CgE = zeros(nx,ny,nmodes); 
-LE = zeros(nx,ny,nmodes); 
+
+%CE = zeros(nx,ny,nmodes); 
+%CgE = zeros(nx,ny,nmodes); 
+%LE = zeros(nx,ny,nmodes); 
 
 fprintf('\nComputing eigenvalues...\n')
 count = 0; 
-for i = 1:10
-    for j = 1:10
+for i = 1:nx
+    for j = 1:ny
 	count = count + 1; 
 	fprintf('%d/%d\n',count,nfiles)
 	   
@@ -91,97 +95,103 @@ for i = 1:10
         im = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(i,j)); %,...
 	im.normalization = 'wMax';
 	im.method = 'finiteDifference'; 
-        [Weig,~,~,~] = im.ModesAtFrequency(omega); 
+        [~,Weig,~,~] = im.ModesAtFrequency(omega); 
 	Ueig = compute_ueig(Weig,dz); 
 	  
         [r2J(i,j,:),~] = compute_modfit(uiso,dz,Ueig,5); 	
 	 
-	return
-
     end
 end
 
 
 %% Plots
-lon = hycom.lon(1:10,1:10); 
-lat = hycom.lat(1:10,1:10); 
+lon = hycom.lon(1:nx,1:ny); 
+lat = hycom.lat(1:nx,1:ny); 
 
 figure
-subplot(321)
-pcolor(lon,lat,squeeze(LO(1:10,1:10,1))./1000); shading interp
-title('Mode 1: wave-length (Oladeji)') 
+subplot(2,3,1)
+pcolor(lon,lat,squeeze(r2O(1:nx,1:ny,1))./1000); shading interp
+title('Mode 1 (R^2)') 
+xlabel('longitude'); ylabel('latitude') 
+cb = colorbar; %caxis([0 1000]) 
+subplot(2,3,3)
+pcolor(lon,lat,squeeze(r2O(1:nx,1:ny,2))./1000); shading interp
+title('Mode 2 (R^2)') 
+xlabel('longitude'); ylabel('latitude') 
+cb = colorbar; %caxis([0 1000]) 
+subplot(2,3,5)
+pcolor(lon,lat,squeeze(r2O(1:nx,1:ny,3))./1000); shading interp
+title('Mode 3 (R^2)') 
+xlabel('longitude'); ylabel('latitude') 
+cb = colorbar; %caxis([0 1000]) 
+subplot(2,5,7)
+pcolor(lon,lat,squeeze(r2O(1:nx,1:ny,4))./1000); shading interp
+title('Mode 4 (R^2)') 
+xlabel('longitude'); ylabel('latitude') 
+cb = colorbar; %caxis([0 1000]) 
+subplot(2,5,9)
+pcolor(lon,lat,squeeze(r2O(1:nx,1:ny,5))./1000); shading interp
+title('Mode 5 (R^2)') 
 xlabel('longitude'); ylabel('latitude') 
 cb = colorbar; %caxis([0 1000]) 
 
-subplot(322)
-pcolor(lon,lat,squeeze(LE(1:10,1:10,1))./1000); shading interp
-title('Mode 1: wave-length (Early)') 
+subplot(2,3,2)
+pcolor(lon,lat,squeeze(r2J(1:nx,1:ny,1))./1000); shading interp
+title('Mode 1 (R^2)') 
+xlabel('longitude'); ylabel('latitude') 
+cb = colorbar; %caxis([0 1000]) 
+subplot(2,3,4)
+pcolor(lon,lat,squeeze(r2J(1:nx,1:ny,2))./1000); shading interp
+title('Mode 3 (R^2)') 
+xlabel('longitude'); ylabel('latitude') 
+cb = colorbar; %caxis([0 1000]) 
+subplot(2,3,6)
+pcolor(lon,lat,squeeze(r2J(1:nx,1:ny,3))./1000); shading interp
+title('Mode 3 (R^2)') 
+xlabel('longitude'); ylabel('latitude') 
+cb = colorbar; %caxis([0 1000]) 
+subplot(2,5,8)
+pcolor(lon,lat,squeeze(r2J(1:nx,1:ny,4))./1000); shading interp
+title('Mode 4 (R^2)') 
+xlabel('longitude'); ylabel('latitude') 
+cb = colorbar; %caxis([0 1000]) 
+subplot(2,5,10)
+pcolor(lon,lat,squeeze(r2J(1:nx,1:ny,5))./1000); shading interp
+title('Mode 5 (R^2)') 
 xlabel('longitude'); ylabel('latitude') 
 cb = colorbar; %caxis([0 1000]) 
 
-subplot(323)
-pcolor(lon,lat,squeeze(LO(1:10,1:10,2))./1000); shading interp
-title('Mode 2: wave-length (Oladeji)') 
+print('R2.png','-r300','-dpng')
+
+
+figure
+subplot(131)
+pcolor(lon,lat,squeeze(LO(1:nx,1:ny,1))./1000); shading interp
+title('Mode 1 wavelength (L)') 
 xlabel('longitude'); ylabel('latitude') 
 cb = colorbar; %caxis([0 1000]) 
-
-subplot(324)
-pcolor(lon,lat,squeeze(LE(1:10,1:10,2))./1000); shading interp
-title('Mode 2: wave-length (Early)') 
+subplot(132)
+pcolor(lon,lat,squeeze(LO(1:nx,1:ny,2))./1000); shading interp
+title('Mode 3 wavelength (L)') 
 xlabel('longitude'); ylabel('latitude') 
 cb = colorbar; %caxis([0 1000]) 
-
-subplot(325)
-pcolor(lon,lat,squeeze(LO(1:10,1:10,3))./1000); shading interp
-title('Mode 3: wave-length (Oladeji)') 
+subplot(133)
+pcolor(lon,lat,squeeze(LO(1:nx,1:ny,3))./1000); shading interp
+title('Mode 3 wavelength (L)') 
 xlabel('longitude'); ylabel('latitude') 
 cb = colorbar; %caxis([0 1000]) 
-
-subplot(326)
-pcolor(lon,lat,squeeze(LE(1:10,1:10,3))./1000); shading interp
-title('Mode 3: wave-length (Early)') 
+subplot(154)
+pcolor(lon,lat,squeeze(LO(1:nx,1:ny,4))./1000); shading interp
+title('Mode 4 wavelength (L)') 
+xlabel('longitude'); ylabel('latitude') 
+cb = colorbar; %caxis([0 1000]) 
+subplot(155)
+pcolor(lon,lat,squeeze(LO(1:nx,1:ny,5))./1000); shading interp
+title('Mode 5 wavelength (L)') 
 xlabel('longitude'); ylabel('latitude') 
 cb = colorbar; %caxis([0 1000]) 
 
 print('L.png','-r300','-dpng')
 
-figure
-subplot(321)
-pcolor(lon,lat,CgO(1:10,1:10,1)); shading interp
-title('Mode 1: group velocity (Oladeji)') 
-xlabel('longitude'); ylabel('latitude') 
-cb = colorbar; %caxis([0 1000]) 
-
-subplot(322)
-pcolor(lon,lat,CgE(1:10,1:10,1)); shading interp
-title('Mode 1: group velocity (Early)') 
-xlabel('longitude'); ylabel('latitude') 
-cb = colorbar; %caxis([0 1000]) 
-
-subplot(323)
-pcolor(lon,lat,CgO(1:10,1:10,2)); shading interp
-title('Mode 2: group velocity (Oladeji)') 
-xlabel('longitude'); ylabel('latitude') 
-cb = colorbar; %caxis([0 1000]) 
-
-subplot(324)
-pcolor(lon,lat,CgE(1:10,1:10,2)); shading interp
-title('Mode 2: group velocity (Early)') 
-xlabel('longitude'); ylabel('latitude') 
-cb = colorbar; %caxis([0 1000]) 
-
-subplot(325)
-pcolor(lon,lat,CgO(1:10,1:10,3)); shading interp
-title('Mode 3: group velocity (Oladeji)') 
-xlabel('longitude'); ylabel('latitude') 
-cb = colorbar; %caxis([0 1000]) 
-
-subplot(326)
-pcolor(lon,lat,CgE(1:10,1:10,3)); shading interp
-title('Mode 3: group velocity (Early)') 
-xlabel('longitude'); ylabel('latitude') 
-cb = colorbar; %caxis([0 1000]) 
-
-print('Cg.png','-r300','-dpng')
 
 system(['mv *.png ' figpath '/'])
