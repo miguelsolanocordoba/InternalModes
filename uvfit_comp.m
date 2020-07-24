@@ -27,7 +27,7 @@ addpath /home/mbui/Temp/forMiguel/funcs/
 
 %% Input Options
 % Location (=1 North Atlantic, =2 South Pacific)
-loc = 1;  locstr = num2str(loc); 
+loc = 2;  locstr = num2str(loc); 
 
 % plotting options (1=yes, 0=no)
 plotini = 1; % Stratification and filtering 
@@ -116,7 +116,7 @@ Cg2 = (omega^2-f^2)./(omega*k2);                 % group-speed
 
 %% Case 3: FD Ueig (Early) 
 % Eigenfunctions
-imU.normalization = 'uMax';
+imU.normalization = 'wMax';
 [Ueigt,~,h3,k3] = imU.ModesAtFrequency(omega);   % omega-const EVP
 
 dzu = repmat(dz,[1,size(dz,1)]);
@@ -507,7 +507,7 @@ title(['R^2 (v) at location ' locstr]);
 xlabel('Modes'); ylabel('R^2'); pbaspect([1.5 1 1]) 
 set(gca,'FontSize',fntsz); xticklabels({'1','1-2','1-3','1-4','1-5'});
 legend(cname{1},cname{2},cname{3},cname{4},cname{5},cname{6},...
-       'Position',[0.66 0.57 0.06 0.05],'FontSize',5,'Box','on')
+       'Position',[0.56 0.57 0.06 0.05],'FontSize',5,'Box','on')
 print('r2.png','-r300','-dpng') 
 
 
