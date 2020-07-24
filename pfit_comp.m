@@ -28,7 +28,7 @@ fntsz = 6;   % legend font size
 
 
 %% Load variables
-load profile_loc1.mat     
+load profile_loc2.mat     
 
 uiso = profile.uiso; 
 viso = profile.viso; 

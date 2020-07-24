@@ -80,20 +80,22 @@ for i = 1:10
     
         %% Compute eigenfunctions 
         % Oladeji
-        [k,C,Cg,L,~,~] = compute_eigen(rho_mean,zf_mean,f,omega);
-        CO(i,j,:) = C(1:5); 
-        CgO(i,j,:) = Cg(1:5); 
-	LO(i,j,:) = L(1:5); 
+        S = compute_eigen(rho_mean,zf_mean,f,omega);
+        [r2O(i,j,:),~] = compute_modfit(uiso,dz,S.Ueig,5); 	
+	
+        CO(i,j,:) = S.C(1:5); 
+        CgO(i,j,:) = S.Cg(1:5); 
+	LO(i,j,:) = S.L(1:5); 
         	
         % Early 
         im = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(i,j)); %,...
 	im.normalization = 'wMax';
-%	im.method = 'finiteDifference'; 
-%             'method','finiteDifference','orderOfAccuracy','4');
-        [~,~,h,K] = im.ModesAtFrequency(omega); 
-        CgE(i,j,:) = sqrt(g*h(1:5)); 
-        LE(i,j,:) = 2*pi./K(1:5);
+	im.method = 'finiteDifference'; 
+        [Weig,~,~,~] = im.ModesAtFrequency(omega); 
+	Ueig = compute_ueig(Weig,dz); 
 	  
+        [r2J(i,j,:),~] = compute_modfit(uiso,dz,Ueig,5); 	
+	 
 	return
 
     end
