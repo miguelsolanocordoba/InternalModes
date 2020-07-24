@@ -65,9 +65,11 @@ zc = zf(1:end-1) + dz/2;
 nz = numel(zc); 
 H = nansum(dz);
 
+rho = rhoFunc(zf); 
+
 % Compute modes using Jeffrey's toolkit
-imf = InternalModes(rhoFunc,zIn,zf,lat); %,...
-imc = InternalModes(rhoFunc,zIn,zc,lat); %,...
+imf = InternalModes(rho,zf,zf,lat,'method','finiteDifference'); %,...
+imc = InternalModes(rho,zf,zc,lat,'method','finiteDifference'); %,...
 
 f =  imf.f0;  %  Coriolis frequency 
 
@@ -120,7 +122,7 @@ kO = S.k; LO = S.L; CO = S.C; CgO = S.Cg; WeigO = S.W; UeigO = S.U;
 %imc.normalization = 'uMax'; 
 %[UeigJ,~,~,~] = imc.ModesAtFrequency(omega); 
 
-%imf.normalization = 'wMax'; 
+imf.normalization = 'wMax'; 
 [~,WeigJ,hJ,kJ] = imf.ModesAtFrequency(omega); 
 UeigJ = compute_ueig(WeigJ,dz'); 
 umax = max(UeigJ(2,:)); 
@@ -128,7 +130,7 @@ umax = max(UeigJ(2,:));
 LJ = 2*pi./kJ; 
 CJ = omega./kn; 
 CgJ = (omega^2-f^2)./(omega*kJ); 
-%CgJ = sqrt(g*hJ); 
+%CeJ = sqrt(g*hJ); % eigen-speed 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -197,9 +199,9 @@ plot(n,kM(n),'r');
 plot(n,kJ(n),'g'); 
 plot(n,kn(n),'*k'); 
 title('Wavenumber (k)') 
-xlabel('Mode'); ylabel('[m^{-1}]'); 
-xticks(n,{'1','2','3','4','5'})
-legend('Oladeji','Maarten','Jeffrey','Analytical')
+ylabel('[rad/m]'); xlabel('Mode'); 
+xticklabels({'1',' ','2',' ','3',' ','4',' ','5'})
+legend('Oladeji','Maarten','Jeffrey','Analytical','Location','NorthWest')
 print('k.png','-r300','-dpng')
 
 figure
@@ -208,8 +210,8 @@ plot(n,LM(n),'r');
 plot(n,LJ(n),'g'); 
 plot(n,L(n),'*k'); 
 title('Wavelength (L)') 
-xlabel('Mode'); ylabel('[km]'); 
-xticks(n,{'1','2','3','4','5'})
+ylabel('[km]'); xlabel('Mode');
+xticklabels({'1',' ','2',' ','3',' ','4',' ','5'})
 legend('Oladeji','Maarten','Jeffrey','Analytical')
 print('L.png','-r300','-dpng')
 
@@ -218,9 +220,9 @@ plot(n,CO(n),'b'); hold on
 plot(n,CM(n),'r'); 
 plot(n,CJ(n),'g'); 
 plot(n,C(n),'*k'); 
-title('Phasespeed (C)') 
-xlabel('Mode'); ylabel('[m/s]'); 
-xticks(n,{'1','2','3','4','5'})
+title('Phase-speed (C)') 
+ylabel('[m/s]'); xlabel('Mode');
+xticklabels({'1',' ','2',' ','3',' ','4',' ','5'})
 legend('Oladeji','Maarten','Jeffrey','Analytical')
 print('C.png','-r300','-dpng')
 
@@ -229,9 +231,9 @@ plot(n,CgO(n),'b'); hold on
 plot(n,CgM(n),'r'); 
 plot(n,CgJ(n),'g'); 
 plot(n,Cg(n),'*k'); 
-title('Groupspeed (C_g)') 
-xlabel('Mode'); ylabel('[m/s]'); 
-xticks(n,{'1','2','3','4','5'})
+title('Group-speed (C_g)') 
+ylabel('[m/s]'); xlabel('Mode'); 
+xticklabels({'1',' ','2',' ','3',' ','4',' ','5'})
 legend('Oladeji','Maarten','Jeffrey','Analytical')
 print('Cg.png','-r300','-dpng')
 
