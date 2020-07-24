@@ -1,13 +1,25 @@
-function [k,L,C,Ce,Ueig] = comp_eigen_ola_new(rho,zf,f,om)
-%% [k,L,C,Ce,Ueig] = COMP_EIGEN_OLA_NEW computes hor. eigenfunctions directly
-%% input
-% rho represents the layer density vector (top to bottom) - mapped to layer centers
-% zf represents layer faces' depth vector (approaches -inf with increase with depth)
-% f - Coriolis frequency
-% om - angular frequency 
-%% output
-% k,L,C,Ce and Ueig represents wavenumber,wavelength,phase speed,eigen
-% speed and hor. eigen functions respectively
+function S = compute_eigenU(rho,zf,f,om)
+%S = COMPUTE_EIGENU computes eigenvalues using Ashok & Bhaduria (2009)
+%
+% S=COMPUTE_EIGENU(rho,zf,f,om) solves the omega-constant eigenvalue problem
+% using the finite difference scheme from Ashok & Bhaduria, which solves for
+% the horizontal eigenfunction (Ueig) at the cell centers of a non-uniform vertical
+% grid.
+%
+% INPUT:
+% rho  := mean density at grid centers [1xN]
+% zf   := grid points at grid faces [1xN+1]
+% f    := Coriolis frequency (constant)
+% om   := anglular frequency (constant)
+%
+% OUTPUT
+% S.L    := wavelength
+% S.C    := phase speed (celerity)
+% S.Cg   := group speed
+% S.Ueig := horizontal eigenvalues (at cell centers 'zc')
+%
+% Created: Oladeji, S. June 2020
+% Modified: Solano, M. July 2020
 
 %om = 2*pi/(T*3600); % angular freq
 %f = 2*7.29*(10^-5)*sin(lat*pi/180); % coriolis freq
@@ -54,6 +66,8 @@ psi(:,end) = [];
 k = abs(sqrt((om^2-f^2))./Ce);
 L  = 2*pi./k;
 C  = om./k;
+Cg = (om^2-f^2)./(om*k);
+
 %% Get U structure
 Ueig1 = psi(1:end-1,:)/2 + psi(2:end,:)/2;
 
@@ -65,4 +79,5 @@ Ueig2 = Ueig1./AA;
 Ueig2(:,Ueig2(N,:)<0) = -Ueig2(:,Ueig2(N,:)<0);
 Ueig = Ueig2;
 
-
+%% Save output in a structure
+S = struct('k',k,'L',L,'C',C,'Cg',Cg,'Ueig',Ueig);

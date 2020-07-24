@@ -89,4 +89,4 @@ Ueig = Ueig2;
 Weig = W2;
 
 %% Save output in a structure
-S = struct('k',k,'L',L,'C',C,'Cg',Cg,'W',Weig,'U',Ueig); 
+S = struct('k',k,'L',L,'C',C,'Cg',Cg,'Weig',Weig,'Ueig',Ueig); 

@@ -115,7 +115,7 @@ kM = 2*pi./LM;
 N2 = N2Func(zc); 
 rho = rhoFunc(zc); 
 S = compute_eigen(rho',zf',f,omega); 
-kO = S.k; LO = S.L; CO = S.C; CgO = S.Cg; WeigO = S.W; UeigO = S.U;
+kO = S.k; LO = S.L; CO = S.C; CgO = S.Cg; WeigO = S.Weig; UeigO = S.Ueig;
 %[kO,CO,CgO,LO,WeigO,UeigO] = compute_eigen(rho',zf',f,omega); 
 
 %% Jeffrey (InternalModes.m)
@@ -205,10 +205,10 @@ legend('Oladeji','Maarten','Jeffrey','Analytical','Location','NorthWest')
 print('k.png','-r300','-dpng')
 
 figure
-plot(n,LO(n),'b'); hold on
-plot(n,LM(n),'r'); 
-plot(n,LJ(n),'g'); 
-plot(n,L(n),'*k'); 
+plot(n,LO(n)/1000,'b'); hold on
+plot(n,LM(n)/1000,'r'); 
+plot(n,LJ(n)/1000,'g'); 
+plot(n,L(n)/1000,'*k'); 
 title('Wavelength (L)') 
 ylabel('[km]'); xlabel('Mode');
 xticklabels({'1',' ','2',' ','3',' ','4',' ','5'})
