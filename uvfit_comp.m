@@ -1,5 +1,4 @@
-clc; clear; close all; 
-%%UVFIT_COMP computes harmonic fits (u,v) from HYCOM profiles.
+clc; clear; close all; %%UVFIT_COMP computes harmonic fits (u,v) from HYCOM profiles.
 % UVFIT_COMP is used to compare the eigenfunctions computed using 
 % Jeffrey Early's InternalModes solver with other finite difference
 % (FD) schemes. 
@@ -27,10 +26,10 @@ addpath /home/mbui/Temp/forMiguel/funcs/
 
 %% Input Options
 % Location (=1 North Atlantic, =2 South Pacific)
-loc = 2;  locstr = num2str(loc); 
+loc = 3;  locstr = num2str(loc); 
 
 % plotting options (1=yes, 0=no)
-plotini = 1; % Stratification and filtering 
+plotini = 0; % Stratification and filtering 
 ploteig = 1; % Eigenvalues (Ueig,Weig) 
 plotfit = 1; % Velocity and fit (pcolor and time series)
 plotsta = 1; % Statistics (R2 and S2)
@@ -40,7 +39,6 @@ dirout = '/data/msolano/figures/modes_hycom/';
 
 %% Load variables
 load(['profile_loc' locstr '.mat'])
-%load profile_loc1.mat     
 
 uiso = profile.uiso; 
 viso = profile.viso; 
@@ -50,7 +48,8 @@ ufiltint = profile.ufiltint;
 vfiltint = profile.vfiltint; 
 
 %% Cases
-cname = {'WKB','Early W','Early U','Oladeji W','Oladeji U','Maarten'};
+cname = {'WKB','FD (Early)','FD (Early U)','FD (Oladeji)','FD (Oladeji U)','Uniform'};
+%cname = {'WKB','FD Early (no mask)','FD Early (with mask)','FD (Oladeji)','FD (Oladeji U)','Uniform'};
 
 %% Initialize
 % Dimensions and constants
@@ -76,19 +75,20 @@ rho_mean = profile.rho_mean;  % Mean density
 lat = profile.latitude;  % Latitude 
 rhof_mean = interp1(zc,rho_mean,zf,'linear','extrap');
 
+% Interpolate density
+rhof_mean2 = interp1([zf(1:end-8); zf(end)],[rhof_mean(1:end-8); rhof_mean(end)],zf);
+rho_mean2 = interp1([zc(1:end-8); zc(end)],[rho_mean(1:end-8); rho_mean(end)],zf);
+
 % Input/Output grids
 zIn = zc; 
 zOut = zf; 
 
 % Initilized Early's InternalModes
 imWKB = InternalModes(rhof_mean,zOut,zOut,lat)
-imf = InternalModes(rhof_mean,zOut,zOut,lat,'method','finiteDifference',...
-                   'orderOfAccuracy',4)
-imU = InternalModes(rho_mean,zIn,zIn,lat,'method','finiteDifference',...)
-                   'orderOfAccuracy',4)
-f = imf.f0; 
+imf = InternalModes(rhof_mean,zOut,zOut,lat,'method','finiteDifference')
+imU = InternalModes(rho_mean,zIn,zIn,lat,'method','finiteDifference')
 
-% ** print out info
+f = imf.f0; 
 
 %% Compute eigenmodes
 % *All cases are interpolated to time-mean layer
@@ -109,10 +109,14 @@ Cg1 = (omega^2-f^2)./(omega*k1);                 % group-speed
 [~,Weig2,h2,k2] = imf.ModesAtFrequency(omega);   % omega-const EVP
 Ueig2 = compute_ueig(Weig2,dz);                  % Normalized Ueig
 
+%k2 = k2.*(2*pi); 
+
 % Eigenvalues
 L2 = 2*pi./k2;                                   % wave-length 
 C2 = omega./k2;                                  % phase-speed
 Cg2 = (omega^2-f^2)./(omega*k2);                 % group-speed 
+%Ce2 = sqrt(omega^2-f^2)./(k2.^2);                % eigen-speed
+Ce2 = sqrt(g*h2);
 
 %% Case 3: FD Ueig (Early) 
 % Eigenfunctions
@@ -140,6 +144,8 @@ Ueig4 = S.Ueig;
 L4 = S.L; 
 C4 = S.C;
 Cg4 = S.Cg;
+k4 = S.k;
+Ce4 = sqrt(omega^2-f^2)./(k4.^2);                % eigen-speed
 
 %% Case 5: FD Ueig (Oladeji) 
 % Eigenfunctions
@@ -152,19 +158,45 @@ C5 = S.C;
 Cg5 = S.Cg;
 
 %% Case 6: Same as (5) but using ufiltint
-zfM = linspace(-H,0,nz+1)'; 
+nzM = 100; % number of layers (uniform)
+zfM = linspace(-H,0,nzM+1)'; 
 dz1 = diff(zfM); 
 zcM = zfM(1:end-1) + dz1/2;
-N2M = interp1(zf,imf.N2,zfM); 
-[C6,Cg6,L6,Weig6,Ueig6] = sturm_liouville_hyd_normalize(omega,N2M,dz1(1),f);
+N2M = interp1(zf,imf.N2,zfM,'linear','extrap'); 
+[C6,Cg6,L6,Weig6,Ueig6t] = sturm_liouville_hyd_normalize(omega,sqrt(N2M),dz1(1),f);
+Ueig6t(:,2:2:end) = -Ueig6t(:,2:2:end);
+Ueig6 = Ueig6t(:,2:end); 
 
 % Interpolate to uniform grid
-ufiltM = zeros(size(ufilt)); 
-vfiltM = zeros(size(vfilt)); 
+ufiltM = zeros(nzM,nt); 
+vfiltM = zeros(nzM,nt); 
 for i = 1:nt
     ufiltM(:,i) = interp1(profile.zc(:,i),profile.ufilt(:,i),zcM,'linear','extrap');  
     vfiltM(:,i) = interp1(profile.zc(:,i),profile.vfilt(:,i),zcM,'linear','extrap');  
 end
+
+%% Print some info 
+fprintf('\nSolutions:')
+
+fprintf('\nMode 1 wavelength (L)')
+fprintf('\nOladeji = %4.2f[km]',L4(1)/1000)
+fprintf('\nJeffrey = %4.2f[km]',L2(1)/1000/(2*pi))
+fprintf('\nMaarten = %4.2f[km]\n',L6(2)/1000)
+
+fprintf('\nMode 1 group-speed (Cg)')
+fprintf('\nOladeji = %4.4f[m/s]',Cg4(1))
+fprintf('\nJeffrey = %4.4f[m/s]',Cg2(1)/(2*pi))
+fprintf('\nMaarten = %4.4f[m/s]\n',Cg6(2))
+
+fprintf('\nMode 1 phase-speed (C)')
+fprintf('\nOladeji = %4.4f[m/s]',C4(1))
+fprintf('\nJeffrey = %4.4f[m/s]',C2(1)/(2*pi))
+fprintf('\nMaarten = %4.4f[m/s]\n',C6(2))
+
+%fprintf('\nMode 1 eigen-speed (C)')
+%fprintf('\nOladeji = %4.4f[m/s]',Ce4(1))
+%fprintf('\nJeffrey = %4.4f[m/s]\n',Ce2(1))
+
 
 
 %% Mode fitting and statistics
@@ -172,28 +204,28 @@ end
 nmodes = 5; 
 
 % CASE 1
-[SS_tot,SS_res,SS_fit,r2u1,s2u1,u1] = compute_modfit2(ufiltint,dz,Ueig1,nmodes); 
-[SS_tot,SS_res,SS_fit,r2v1,s2v1,v1] = compute_modfit2(vfiltint,dz,Ueig1,nmodes); 
+[SS_tot,SS_res1,SS_fit,r2u1,s2u1,u1] = compute_modfit2(ufiltint,dz,Ueig1,nmodes); 
+[SS_tot,SS_res1,SS_fit,r2v1,s2v1,v1] = compute_modfit2(vfiltint,dz,Ueig1,nmodes); 
 
 % CASE 2
-[SS_tot,SS_res,SS_fit,r2u2,s2u2,u2] = compute_modfit2(ufiltint,dz,Ueig2,nmodes); 
-[SS_tot,SS_res,SS_fit,r2v2,s2v2,v2] = compute_modfit2(vfiltint,dz,Ueig2,nmodes); 
+[SS_tot,SS_res2,SS_fit,r2u2,s2u2,u2] = compute_modfit2(ufiltint,dz,Ueig2,nmodes); 
+[SS_tot,SS_res2,SS_fit,r2v2,s2v2,v2] = compute_modfit2(vfiltint,dz,Ueig2,nmodes); 
 
 % CASE 3
-[SS_tot,SS_res,SS_fit,r2u3,s2u3,u3] = compute_modfit2(ufiltint,dz,Ueig3,nmodes); 
-[SS_tot,SS_res,SS_fit,r2v3,s2v3,v3] = compute_modfit2(vfiltint,dz,Ueig3,nmodes); 
+[SS_tot,SS_res3,SS_fit,r2u3,s2u3,u3] = compute_modfit2(ufiltint,dz,Ueig3,nmodes); 
+[SS_tot,SS_res3,SS_fit,r2v3,s2v3,v3] = compute_modfit2(vfiltint,dz,Ueig3,nmodes); 
 
 % CASE 4
-[SS_tot,SS_res,SS_fit,r2u4,s2u4,u4] = compute_modfit2(ufiltint,dz,Ueig4,nmodes); 
-[SS_tot,SS_res,SS_fit,r2v4,s2v4,v4] = compute_modfit2(vfiltint,dz,Ueig4,nmodes); 
+[SS_tot,SS_res4,SS_fit,r2u4,s2u4,u4] = compute_modfit2(ufiltint,dz,Ueig4,nmodes); 
+[SS_tot,SS_res4,SS_fit,r2v4,s2v4,v4] = compute_modfit2(vfiltint,dz,Ueig4,nmodes); 
 
 % CASE 5
-[SS_tot,SS_res,SS_fit,r2u5,s2u5,u5] = compute_modfit2(ufiltint,dz,Ueig5,nmodes); 
-[SS_tot,SS_res,SS_fit,r2v5,s2v5,v5] = compute_modfit2(vfiltint,dz,Ueig5,nmodes); 
+[SS_tot,SS_res5,SS_fit,r2u5,s2u5,u5] = compute_modfit2(ufiltint,dz,Ueig5,nmodes); 
+[SS_tot,SS_res5,SS_fit,r2v5,s2v5,v5] = compute_modfit2(vfiltint,dz,Ueig5,nmodes); 
 
 % CASE 6
-[SS_tot,SS_res,SS_fit,r2u6,s2u6,u6] = compute_modfit2(ufiltM,dz1,Ueig6,nmodes); 
-[SS_tot,SS_res,SS_fit,r2v6,s2v6,v6] = compute_modfit2(vfiltM,dz1,Ueig6,nmodes); 
+[SS_tot,SS_res6,SS_fit,r2u6,s2u6,u6] = compute_modfit2(ufiltM,dz1,Ueig6,nmodes); 
+[SS_tot,SS_res6,SS_fit,r2v6,s2v6,v6] = compute_modfit2(vfiltM,dz1,Ueig6,nmodes); 
 
 % Fit of all modes (1 to nmodes)
 ufit1 = sum(u1,3); vfit1 = sum(v1,3); 
@@ -217,9 +249,10 @@ plot(imf.rho,imf.z,'r');
 title('Density'); xlabel('\sigma_2 [kg/m^3'); ylabel('Depth [m]')
 ylim([-H 0]);
 subplot(122)
-semilogx(sqrt(imf.N2),imf.z,'r'); 
+semilogx(sqrt(imf.N2),imf.z,'k'); hold on
+semilogx(sqrt(N2M),zfM,'b'); hold on
 title('Stratification'); xlabel('N [1/sec]'); ylabel('Depth [m]')
-ylim([-H 0]);
+ylim([-500 0]);
 print('stratification.png','-r300','-dpng')
 
 % Filtered velocities
@@ -252,53 +285,125 @@ end % if plotini
 
 %% ploteig: eigenfunctions (Ueig, Weig)
 if ploteig
+%ymin = -100;
+%figure;
+%subplot(161)
+%semilogx(sqrt(imf.N2),imf.z,'k'); hold on
+%semilogx(sqrt(imU.N2),imU.z,'b'); 
+%%plot(imf.N2,imf.z,'k'); hold on
+%%semilogx(sqrt(N2M),zfM,'b'); hold on
+%title('Stratification'); xlabel('N^2 [1/s^2]'); ylabel('Depth [m]')
+%axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]); 
+%legend('no mask','with mask','Box','on',...
+%       'Position',[0.045 0.27 0.06 0.1],'FontSize',5)
+%
+%subplot(162)
+%%plot(Ueig1(:,1),zc,'k','LineWidth',2.5); hold on
+%plot(Ueig2(:,1)-Ueig3(:,1),zc,'b'); hold on
+%plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
+%title('Mode 1'); xlabel('U_{eig}');% ylabel('Depth [m]');
+%yticklabels('off')
+%axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
+%%legend(cname{1},cname{2},cname{4},cname{6},'Box','on',...
+%
+%subplot(163)
+%%plot(Ueig1(:,2),zc,'k','LineWidth',2.5); hold on
+%plot(Ueig2(:,2)-Ueig3(:,2),zc,'b'); hold on
+%plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
+%title('Mode 2'); xlabel('U_{eig}'); %ylabel('Depth [m]');
+%axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
+%yticklabels([])
+%
+%subplot(164)
+%%plot(Ueig1(:,3),zc,'k','LineWidth',2.5); hold on
+%plot(Ueig2(:,3)-Ueig3(:,3),zc,'b'); hold on
+%plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
+%title('Mode 3'); xlabel('U_{eig}'); %ylabel('Depth [m]');
+%axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
+%yticklabels([])
+%
+%subplot(165)
+%%plot(Ueig1(:,4),zc,'k','LineWidth',2.5); hold on
+%plot(Ueig2(:,4)-Ueig3(:,4),zc,'b'); hold on
+%plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
+%title('Mode 4'); xlabel('U_{eig}');% ylabel('Depth [m]');
+%axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
+%yticklabels([])
+%
+%subplot(166)
+%%plot(Ueig1(:,5),zc,'k','LineWidth',2.5); hold on
+%plot(Ueig2(:,5)-Ueig3(:,5),zc,'b'); hold on
+%plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
+%title('Mode 5'); xlabel('U_{eig}');% ylabel('Depth [m]');
+%axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
+%yticklabels([])
+
 figure;
-subplot(151)
+subplot(161)
+semilogx(sqrt(imf.N2),imf.z,'k'); hold on
+%semilogx(sqrt(imU.N2),imU.z,'b'); 
+%plot(imf.N2,imf.z,'k'); hold on
+%semilogx(sqrt(N2M),zfM,'b'); hold on
+title('Stratification'); xlabel('N^2 [1/s^2]'); ylabel('Depth [m]')
+axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
+ylim([ymin 0]); yticklabels([])
+
+subplot(162)
 plot(Ueig1(:,1),zc,'k','LineWidth',2.5); hold on
-plot(Ueig2(:,1),zc,'y'); hold on
-plot(Ueig3(:,1),zc,'b');
+plot(Ueig2(:,1),zc,'b'); hold on
+%plot(Ueig3(:,1),zc,'r');
 plot(Ueig4(:,1),zc,'--r');
-plot(Ueig5(:,1),zc,'--g');
-title('Mode 1'); xlabel('U_{eig}'); ylabel('Depth [m]');
+plot(Ueig6(:,1),zcM,'--g');
+plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
+title('Mode 1'); xlabel('U_{eig}');% ylabel('Depth [m]');
+yticklabels('off')
 axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
-legend(cname{1},cname{2},cname{3},cname{4},cname{5},'Box','on',...
-       'Position',[0.04 0.67 0.06 0.1],'FontSize',5)
+legend(cname{1},cname{2},cname{4},cname{6},'Box','on',...
+       'Position',[0.035 0.67 0.06 0.1],'FontSize',5)
 
-subplot(152)
+subplot(163)
 plot(Ueig1(:,2),zc,'k','LineWidth',2.5); hold on
-plot(Ueig2(:,2),zc,'y'); 
-plot(Ueig3(:,2),zc,'b');
+plot(Ueig2(:,2),zc,'b'); 
+%plot(Ueig3(:,2),zc,'r');
 plot(Ueig4(:,2),zc,'--r');
-plot(Ueig5(:,2),zc,'--g');
-title('Mode 2'); xlabel('U_{eig}'); ylabel('Depth [m]');
+plot(Ueig6(:,2),zcM,'--g');
+plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
+title('Mode 2'); xlabel('U_{eig}'); %ylabel('Depth [m]');
 axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
+yticklabels([])
 
-subplot(153)
+subplot(164)
 plot(Ueig1(:,3),zc,'k','LineWidth',2.5); hold on
-plot(Ueig2(:,3),zc,'y');
-plot(Ueig3(:,3),zc,'b');
+plot(Ueig2(:,3),zc,'b');
+%plot(Ueig3(:,3),zc,'r');
 plot(Ueig4(:,3),zc,'--r');
-plot(Ueig5(:,3),zc,'--g');
-title('Mode 3'); xlabel('U_{eig}'); ylabel('Depth [m]');
+plot(Ueig6(:,3),zcM,'--g');
+plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
+title('Mode 3'); xlabel('U_{eig}'); %ylabel('Depth [m]');
 axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
+yticklabels([])
 
-subplot(154)
+subplot(165)
 plot(Ueig1(:,4),zc,'k','LineWidth',2.5); hold on
-plot(Ueig2(:,4),zc,'y');
-plot(Ueig3(:,4),zc,'b');
+plot(Ueig2(:,4),zc,'b');
+%plot(Ueig3(:,4),zc,'r');
 plot(Ueig4(:,4),zc,'--r');
-plot(Ueig5(:,4),zc,'--g');
-title('Mode 4'); xlabel('U_{eig}'); ylabel('Depth [m]');
+plot(Ueig6(:,4),zcM,'--g');
+plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
+title('Mode 4'); xlabel('U_{eig}');% ylabel('Depth [m]');
 axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
+yticklabels([])
 
-subplot(155)
+subplot(166)
 plot(Ueig1(:,5),zc,'k','LineWidth',2.5); hold on
-plot(Ueig2(:,5),zc,'y'); 
-plot(Ueig3(:,5),zc,'b');
+plot(Ueig2(:,5),zc,'b'); 
+%plot(Ueig3(:,5),zc,'r');
 plot(Ueig4(:,5),zc,'--r');
-plot(Ueig5(:,5),zc,'--g');
-title('Mode 5'); xlabel('U_{eig}'); ylabel('Depth [m]');
+plot(Ueig6(:,5),zcM,'--g');
+plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
+title('Mode 5'); xlabel('U_{eig}');% ylabel('Depth [m]');
 axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
+yticklabels([])
 
 print('Ueig.png','-r300','-dpng')
 
@@ -308,40 +413,47 @@ end % if ploteig
 if plotfit 
 
 [x,y] = meshgrid(t,zIn); 
-cmin = -0.02; cmax = 0.02; 
+[x1,y1] = meshgrid(t,zcM); 
+cmin = -0.04; cmax = 0.04; 
 ymin = -H; 
 
 % Residuals: U (color contours)
-figure
+figure; colormap('jet')
 subplot(511)
-pcolor(x,y,ufilt); shading interp; colorbar; caxis([-0.05 0.05])
-title('Band-passed u_{iso}');
+pcolor(x,y,ufilt); shading interp; colorbar; caxis([cmin cmax])
+title('Band-passed eastward velocity (u_{iso})');
 datetick('x','dd'); xlim([t(1) t(end)]);
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
+set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
 
 subplot(512)
-pcolor(x,y,ufit1-ufilt); shading interp; colorbar; caxis([cmin cmax])
-title(['Residual (u_{fit}-u_{iso}) for ' cname{1}])
+pcolor(x,y,ufit1); shading interp; colorbar; caxis([cmin cmax])
+title([cname{1}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
+set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
 
 subplot(513)
-pcolor(x,y,ufit2-ufilt); shading interp; colorbar; caxis([cmin cmax])
-title(['Residual (u_{fit}-u_{iso}) for ' cname{2}])
+pcolor(x,y,ufit2); shading interp; colorbar; caxis([cmin cmax])
+title([cname{2}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
+set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
 
 subplot(514)
-pcolor(x,y,ufit4-ufilt); shading interp; colorbar; caxis([cmin cmax])
-title(['Residual (u_{fit}-u_{iso}) for ' cname{4}])
+pcolor(x,y,ufit4); shading interp; colorbar; caxis([cmin cmax])
+title([cname{4}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
+set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
 
 subplot(515)
-pcolor(x,y,ufit5-ufilt); shading interp; colorbar; caxis([cmin cmax])
-title(['Residual (u_{fit}-u_{iso}) for ' cname{5}])
-datetick('x','dd'); xlim([t(1) t(end)]); xlabel('Days since Sept. 1, 2016')
+pcolor(x1,y1,ufit6); shading interp; colorbar; caxis([cmin cmax])
+title([cname{6}])
+datetick('x','dd'); xlim([t(1) t(end)]); 
+xlabel('Days since Sept. 1, 2016','FontSize',8)
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
+set(gca,'TickLength',[0.01 0.01],'TickDir','both');
 
 print('ufit_vs_uiso.png','-r300','-dpng')
 
@@ -354,26 +466,26 @@ datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(512)
-pcolor(x,y,vfit1-vfilt); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,vfit1); shading interp; colorbar; caxis([cmin cmax])
 title(['V_{fit} for ' cname{1}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(513)
-pcolor(x,y,vfit2-vfilt); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,vfit2); shading interp; colorbar; caxis([cmin cmax])
 title(['V_{fit} for ' cname{2}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(514)
-pcolor(x,y,vfit4-vfilt); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,vfit4); shading interp; colorbar; caxis([cmin cmax])
 title(['V_{fit} for ' cname{4}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(515)
-pcolor(x,y,vfit5-vfilt); shading interp; colorbar; caxis([cmin cmax])
-title(['V_{fit} for ' cname{5}])
+pcolor(x1,y1,vfit6); shading interp; colorbar; caxis([cmin cmax])
+title(['V_{fit} for ' cname{6}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
@@ -438,15 +550,17 @@ plot(t,ufilt(1,:),'k','LineWidth',2.5); hold on
 plot(t,ufit1(1,:),'b'); 
 plot(t,ufit2(1,:),'r') 
 plot(t,ufit4(1,:),'g')
+plot(t,ufit6(1,:),'m')
 datetick('x','dd'); ylabel('u [m/s]'); pbaspect([5 1 1])
-legend('u_{iso}',cname{1},cname{2},cname{4},'Location','EastOutside')
+legend('u_{iso}',cname{1},cname{2},cname{4},cname{6},'Location','EastOutside')
 subplot(212)
 plot(t,vfilt(1,:),'k','LineWidth',2.5); hold on
 plot(t,vfit1(1,:),'b'); 
 plot(t,vfit2(1,:),'r') 
 plot(t,vfit4(1,:),'g')
+plot(t,vfit6(1,:),'m')
 datetick('x','dd'); ylabel('v [m/s]'); pbaspect([5 1 1])
-legend('v_{iso}',cname{1},cname{2},cname{4},'Location','EastOutside')
+legend('v_{iso}',cname{1},cname{2},cname{4},cname{6},'Location','EastOutside')
 print('uv_bot.png','-r300','-dpng') 
 
 % middepth
@@ -456,16 +570,18 @@ plot(t,ufilt(8,:),'k','LineWidth',2.5); hold on
 plot(t,ufit1(8,:),'b'); 
 plot(t,ufit2(8,:),'r') 
 plot(t,ufit4(8,:),'g')
+plot(t,ufit6(56,:),'m')
 datetick('x','dd'); ylabel('u [m/s]'); pbaspect([5 1 1])
-legend('u_{iso}',cname{1},cname{2},cname{4},'Location','EastOutside')
+legend('u_{iso}',cname{1},cname{2},cname{4},cname{6},'Location','EastOutside')
 
 subplot(212)
 plot(t,vfilt(8,:),'k','LineWidth',2.5); hold on
 plot(t,vfit1(8,:),'b'); 
 plot(t,vfit2(8,:),'r') 
 plot(t,vfit4(8,:),'g')
+plot(t,vfit6(56,:),'m')
 datetick('x','dd'); ylabel('v [m/s]'); pbaspect([5 1 1])
-legend('v_{iso}',cname{1},cname{2},cname{4},'Location','EastOutside')
+legend('v_{iso}',cname{1},cname{2},cname{4},cname{6},'Location','EastOutside')
 print('uv_mid.png','-r300','-dpng') 
 
 % bottom
@@ -475,15 +591,17 @@ plot(t,ufilt(end,:),'k','LineWidth',2.5); hold on
 plot(t,ufit1(end,:),'b'); 
 plot(t,ufit2(end,:),'r') 
 plot(t,ufit4(end,:),'g')
+plot(t,ufit6(end,:),'m')
 datetick('x','dd'); ylabel('u [m/s]');  pbaspect([5 1 1])
-legend('u_{iso}',cname{1},cname{2},cname{4},'Location','EastOutside')
+legend('u_{iso}',cname{1},cname{2},cname{4},cname{6},'Location','EastOutside')
 subplot(212)
 plot(t,vfilt(end,:),'k','LineWidth',2.5); hold on
 plot(t,vfit1(end,:),'b'); 
 plot(t,vfit2(end,:),'r') 
 plot(t,vfit4(end,:),'g')
+plot(t,vfit6(end,:),'m')
 datetick('x','dd'); ylabel('v [m/s]'); pbaspect([5 1 1])
-legend('v_{iso}',cname{1},cname{2},cname{4},'Location','EastOutside')
+legend('v_{iso}',cname{1},cname{2},cname{4},cname{6},'Location','EastOutside')
 print('uv_sur.png','-r300','-dpng') 
 
 end % if plotfit
@@ -493,21 +611,32 @@ end % if plotfit
 if plotsta
 
 figure
+plot(t,SS_tot(:,5),'k','LineWidth',2); hold on 
+plot(t,SS_res1(:,5),'b')
+plot(t,SS_res2(:,5),'r')
+plot(t,SS_res4(:,5),'g')
+plot(t,SS_res6(:,5),'m')
+datetick('x','dd'); ylabel('SS'); pbaspect([5 1 1])
+legend('SS_{total}',cname{1},cname{2},cname{4},cname{6})
+print('SS.png','-r300','-dpng') 
+
+
+figure
 subplot(121)
-bar([r2u1 r2u2 r2u3 r2u4 r2u5 r2u6])
+bar([r2u1 r2u2 r2u4 r2u6])
 title(['R^2 (u) at location ' locstr]); 
 xlabel('Modes'); ylabel('R^2'); pbaspect([1.5 1 1]) 
 set(gca,'FontSize',fntsz); xticklabels({'1','1-2','1-3','1-4','1-5'});
-legend(cname{1},cname{2},cname{3},cname{4},cname{5},cname{6},...
-       'Position',[0.16 0.57 0.06 0.05],'FontSize',5,'Box','on')
+legend(cname{1},cname{2},cname{4},cname{6},...
+       'Position',[0.16 0.57 0.06 0.05],'FontSize',5,'Box','off')
 
 subplot(122)
-bar([r2v1 r2v2 r2v3 r2v4 r2v5 r2v6])
+bar([r2v1 r2v2 r2v4 r2v6])
 title(['R^2 (v) at location ' locstr]); 
 xlabel('Modes'); ylabel('R^2'); pbaspect([1.5 1 1]) 
 set(gca,'FontSize',fntsz); xticklabels({'1','1-2','1-3','1-4','1-5'});
-legend(cname{1},cname{2},cname{3},cname{4},cname{5},cname{6},...
-       'Position',[0.56 0.57 0.06 0.05],'FontSize',5,'Box','on')
+legend(cname{1},cname{2},cname{4},cname{6},...
+       'Position',[0.56 0.57 0.06 0.05],'FontSize',5,'Box','off')
 print('r2.png','-r300','-dpng') 
 
 

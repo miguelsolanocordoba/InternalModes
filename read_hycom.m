@@ -22,14 +22,14 @@ addpath /data/msolano/Matlab
 % loc1 > runnum=221;  blki=27; blkj=45;
 % loc2 > runnum=190;  blki=15; blkj=25; 
 
-runnum = 190;
+runnum = 221;
 runnumstr = num2str(runnum);
-blki=15;
-blkj=25;
+blki=27;
+blkj=45;
 
 % Directories
-%dirin = '/data2/mbui/for_keshav/tiles/'; % loc1
-dirin = '/data2/msolano/forEmanuel/hycom/GLBc0.04/expt_19.0/'; 
+dirin = '/data2/mbui/for_keshav/tiles/'; % loc1
+%dirin = '/data2/msolano/forEmanuel/hycom/GLBc0.04/expt_19.0/'; 
 
 fprintf('\nReading HYCOM files (read_hycom)\n')
 fprintf('Input directory: %s\n',dirin)
@@ -52,6 +52,10 @@ fname2 = [dirin 'v_iso/v_' num2str(runnum) '_blk_' ...
 fname3 = [dirin 'thknss/thknss_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
 fname4 = [dirin 'sig/sig_' num2str(runnum) '_blk_' ...
+           num2str(blki) '_' num2str(blkj) '.BinF'];
+fname5 = [dirin 'temp/T_' num2str(runnum) '_blk_' ...
+           num2str(blki) '_' num2str(blkj) '.BinF'];
+fname6 = [dirin 'sal/S_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
 
 % Dimensions
@@ -90,12 +94,18 @@ fid1 = fopen(fname1,'r',IEEE);
 fid2 = fopen(fname2,'r',IEEE);
 fid3 = fopen(fname3,'r',IEEE);
 fid4 = fopen(fname4,'r',IEEE);
+fid5 = fopen(fname5,'r',IEEE);
+fid6 = fopen(fname6,'r',IEEE);
+
+fname5
 
 %% Read variables: u_iso, v_iso, sig, thknss
 uiso = [];
 viso = [];
 thknss = [];
 sig = [];
+sal = [];
+temp = [];
 
 % extract layer thickness, u,v in space and time
 fprintf('\nReading HYCOM output: \n') 
@@ -108,11 +118,15 @@ for i=1:nt
         alldata2 = fread(fid2,lenrec2,'single');
         alldata3 = fread(fid3,lenrec2,'single');
         alldata4 = fread(fid4,lenrec2,'single');
+        alldata5 = fread(fid5,lenrec2,'single');
+        alldata6 = fread(fid6,lenrec2,'single');
         
         uiso(:,:,k,i)   = permute(reshape(alldata1(2:end-1),[nxb nyb]),[2 1]);
         viso(:,:,k,i)   = permute(reshape(alldata2(2:end-1),[nxb nyb]),[2 1]);
         thknss(:,:,k,i) = permute(reshape(alldata3(2:end-1),[nxb nyb]),[2 1]);
         sig(:,:,k,i)    = permute(reshape(alldata4(2:end-1),[nxb nyb]),[2 1]);
+        temp(:,:,k,i)    = permute(reshape(alldata5(2:end-1),[nxb nyb]),[2 1]);
+        sal(:,:,k,i)    = permute(reshape(alldata6(2:end-1),[nxb nyb]),[2 1]);
         
     end
 end
@@ -122,6 +136,8 @@ fclose(fid1);
 fclose(fid2);
 fclose(fid3);
 fclose(fid4);
+fclose(fid5);
+fclose(fid6);
 
 % Don't save halos (nbf) 
 b = [nbf+1:nx+nbf]; 
@@ -136,5 +152,7 @@ hycom.dz  = thknss(a,b,:,:);  % layer thickness
 hycom.uiso = uiso(a,b,:,:);   % baroclinic velocity (u) 
 hycom.viso = viso(a,b,:,:);   % baroclinic velocity (v) 
 hycom.rho = sig(a,b,:,:);     % density  
+hycom.salt = sal(a,b,:,:);    % salinity 
+hycom.temp = temp(a,b,:,:);   % temperature 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% EoF %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
