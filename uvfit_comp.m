@@ -1,4 +1,5 @@
-clc; clear; close all; %%UVFIT_COMP computes harmonic fits (u,v) from HYCOM profiles.
+clc; clear; close all; 
+%%UVFIT_COMP computes harmonic fits (u,v) from HYCOM profiles.
 % UVFIT_COMP is used to compare the eigenfunctions computed using 
 % Jeffrey Early's InternalModes solver with other finite difference
 % (FD) schemes. 
@@ -420,35 +421,35 @@ ymin = -H;
 % Residuals: U (color contours)
 figure; colormap('jet')
 subplot(511)
-pcolor(x,y,ufilt); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,ufilt); shading flat; colorbar; caxis([cmin cmax])
 title('Band-passed eastward velocity (u_{iso})');
 datetick('x','dd'); xlim([t(1) t(end)]);
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
 
 subplot(512)
-pcolor(x,y,ufit1); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,ufit1); shading flat; colorbar; caxis([cmin cmax])
 title([cname{1}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
 
 subplot(513)
-pcolor(x,y,ufit2); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,ufit2); shading flat; colorbar; caxis([cmin cmax])
 title([cname{2}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
 
 subplot(514)
-pcolor(x,y,ufit4); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,ufit4); shading flat; colorbar; caxis([cmin cmax])
 title([cname{4}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
 
 subplot(515)
-pcolor(x1,y1,ufit6); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x1,y1,ufit6); shading flat; colorbar; caxis([cmin cmax])
 title([cname{6}])
 datetick('x','dd'); xlim([t(1) t(end)]); 
 xlabel('Days since Sept. 1, 2016','FontSize',8)
@@ -458,33 +459,33 @@ set(gca,'TickLength',[0.01 0.01],'TickDir','both');
 print('ufit_vs_uiso.png','-r300','-dpng')
 
 % V (color contours)
-figure
+figure; colormap('jet')
 subplot(511)
-pcolor(x,y,vfilt); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,vfilt); shading flat; colorbar; caxis([cmin cmax])
 title('Band-passed V_{iso}'); 
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(512)
-pcolor(x,y,vfit1); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,vfit1); shading flat; colorbar; caxis([cmin cmax])
 title(['V_{fit} for ' cname{1}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(513)
-pcolor(x,y,vfit2); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,vfit2); shading flat; colorbar; caxis([cmin cmax])
 title(['V_{fit} for ' cname{2}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(514)
-pcolor(x,y,vfit4); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,vfit4); shading flat; colorbar; caxis([cmin cmax])
 title(['V_{fit} for ' cname{4}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(515)
-pcolor(x1,y1,vfit6); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x1,y1,vfit6); shading flat; colorbar; caxis([cmin cmax])
 title(['V_{fit} for ' cname{6}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
@@ -492,33 +493,33 @@ ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 print('vfit_vs_viso.png','-r300','-dpng')
 
 % V (color contours)
-figure
+figure; colormap('jet')
 subplot(511)
-pcolor(x,y,vfilt); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,vfilt); shading flat; colorbar; caxis([cmin cmax])
 title('Band-passed V_{iso}');
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(512)
-pcolor(x,y,squeeze(v1(:,:,1))); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,squeeze(v1(:,:,1))); shading flat; colorbar; caxis([cmin cmax])
 title(['V_{fit} for mode 1'])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(513)
-pcolor(x,y,sum(v1(:,:,1:2),3)); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,sum(v1(:,:,1:2),3)); shading flat; colorbar; caxis([cmin cmax])
 title(['V_{fit} for modes 1-2'])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(514)
-pcolor(x,y,sum(v1(:,:,1:3),3)); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,sum(v1(:,:,1:3),3)); shading flat; colorbar; caxis([cmin cmax])
 title(['V_{fit} after modes 1-3'])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(515)
-pcolor(x,y,vfit1); shading interp; colorbar; caxis([cmin cmax])
+pcolor(x,y,vfit1); shading flat; colorbar; caxis([cmin cmax])
 title(['V_{fit} for modes 1-5'])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
@@ -628,7 +629,7 @@ title(['R^2 (u) at location ' locstr]);
 xlabel('Modes'); ylabel('R^2'); pbaspect([1.5 1 1]) 
 set(gca,'FontSize',fntsz); xticklabels({'1','1-2','1-3','1-4','1-5'});
 legend(cname{1},cname{2},cname{4},cname{6},...
-       'Position',[0.16 0.57 0.06 0.05],'FontSize',5,'Box','off')
+       'Position',[0.17 0.65 0.06 0.05],'FontSize',5,'Box','off')
 
 subplot(122)
 bar([r2v1 r2v2 r2v4 r2v6])
@@ -636,7 +637,7 @@ title(['R^2 (v) at location ' locstr]);
 xlabel('Modes'); ylabel('R^2'); pbaspect([1.5 1 1]) 
 set(gca,'FontSize',fntsz); xticklabels({'1','1-2','1-3','1-4','1-5'});
 legend(cname{1},cname{2},cname{4},cname{6},...
-       'Position',[0.56 0.57 0.06 0.05],'FontSize',5,'Box','off')
+       'Position',[0.65 0.65 0.06 0.05],'FontSize',5,'Box','off')
 print('r2.png','-r300','-dpng') 
 
 

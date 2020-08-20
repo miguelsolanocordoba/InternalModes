@@ -31,6 +31,7 @@ dzc = zc(2:end) - zc(1:end-1);
 N2 = -(9.81/1025)*(drho./dzc);  % brunt vaisala frequency
 N2 = [N2(1);N2;N2(end)];
 N2 =(N2(1:end-1)/2 + N2(2:end)/2);
+N2(N2<1e-10)=1e-10; % Mask negative and very small values**
 
 % Compute parameters
 H = nansum(dz);
@@ -50,6 +51,8 @@ end
 i=i+1;
 A(i,-1+i) = -1;
 A(i, 0+i) = 1;
+
+save('eigenu.mat','A','B','N2') 
 
 % Solve the EVP
 [psi1,invCe2] = eig(A,B);
