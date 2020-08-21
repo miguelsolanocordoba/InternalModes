@@ -52,8 +52,6 @@ i=i+1;
 A(i,-1+i) = -1;
 A(i, 0+i) = 1;
 
-save('eigenu.mat','A','B','N2') 
-
 % Solve the EVP
 [psi1,invCe2] = eig(A,B);
 Ce2 = 1./(diag(invCe2));

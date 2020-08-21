@@ -26,8 +26,8 @@ figpath = '/data/msolano/figures/test';
 %% Read HYCOM variables
 hycom = read_hycom(); % !!!edit read_hycom.m to change tile!!! 
 [nx,ny,nz,nt] = size(hycom.rho); % tile size 
-%nx = 10; % over-ride x-size 
-%ny = 10; % over-ride y-size
+nx = 100; % over-ride x-size 
+ny = 100; % over-ride y-size
 dzi = 25; % layer thickness for uniform grid [m]
 
 % Constants
@@ -53,10 +53,10 @@ k5 = zeros(nx,ny,nmodes);
 fprintf('\nComputing eigenvalues...\n')
 count = 0; 
 counti = 0;
-for ii = 16:nx
+for ii = 1:nx
     counti = counti + 1; 
     countj = 0; 
-    for j = 44
+    for j = 1:ny
 	countj = countj + 1; 
 	count = count + 1; 
 	fprintf('%d/%d\n',count,nfiles)
