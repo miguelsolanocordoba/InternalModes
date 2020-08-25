@@ -81,4 +81,4 @@ Ueig2(:,Ueig2(N,:)<0) = -Ueig2(:,Ueig2(N,:)<0);
 Ueig = Ueig2;
 
 %% Save output in a structure
-S = struct('k',k,'L',L,'C',C,'Cg',Cg,'Ueig',Ueig);
+S = struct('N2',N2,'k',k,'L',L,'C',C,'Cg',Cg,'Ueig',Ueig);

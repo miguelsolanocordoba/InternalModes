@@ -36,7 +36,7 @@ omega = 12.1408331767/24/3600;  % M2 frequency
 nfiles = nx*ny; 
 nmodes = 5; 
 
-% Variables to plot
+% Pre-allocation
 Ueig1 = zeros(nx,ny,41,nmodes); 
 Ueig2 = zeros(nx,ny,41,nmodes); 
 Ueig3 = zeros(nx,ny,41,nmodes); 
@@ -93,19 +93,19 @@ for ii = 1:nx
 
 %*****  Compute eigenfunctions 
 %% Case 1: WKB (Early) 
-        im = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(ii,j));
+        im = InternalModes(rhof_mean+1000,zf_mean,zf_mean,hycom.lat(ii,j));
         [~,Weig1,~,k] = im.ModesAtFrequency(omega);
         Ueig1(ii,j,1:nz,:) = compute_ueig(Weig1(:,1:nmodes),dz);
-	k1 = k(:,1:nmodes); clear k
+	k1(ii,j,:) = k(:,1:nmodes); clear k
 
 %% Case 2: FD (Early) 
-        imFD = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(ii,j),...
+        imFD = InternalModes(rhof_mean+1000,zf_mean,zf_mean,hycom.lat(ii,j),...
 	                     'method','finiteDifference',...
 			     'orderOfAccuracy',2);
 	[~,Weig2,~,k] = imFD.ModesAtFrequency(omega); 
         Ueig2(ii,j,1:nz,:) = compute_ueig(Weig2(:,1:nmodes),dz); 
-	k2 = k(:,1:nmodes); clear k
-	
+	k2(ii,j,:) = k(:,1:nmodes); clear k
+        
 %% Case 3: FD (Oladeji W)
         S3 = compute_eigen(rho_mean,zf_mean,f,omega);
 	Ueig3(ii,j,1:nz,:) = S3.Ueig(:,1:nmodes); 
@@ -121,13 +121,13 @@ for ii = 1:nx
         zfM = linspace(-H,0,nzM+1)';
         dz1 = diff(zfM);
         zcM = zfM(1:end-1) + dz1/2;
-        N2M = interp1(zf_mean,im.N2,zfM,'linear','extrap');
-	N2M(N2M<0) = 1e-10; % Mask unstable (negative) stratification
+        N2M = interp1(zc_mean,S4.N2,zfM,'linear','extrap');
+%	N2M(N2M<0) = 1e-10; % Mask unstable (negative) stratification
         [~,~,L5,~,Ueig6t] = sturm_liouville_hyd_normalize(omega,sqrt(N2M),dz1(1),f);
         Ueig6t(:,2:2:end) = -Ueig6t(:,2:2:end);
 
         Ueig5(ii,j,1:nzM,:) = Ueig6t(:,2:nmodes+1);
-	k5(ii,j,:) = 2*pi./(L5(2:nmodes+1));
+	k5(ii,j,:) = 2*pi./(L5(1:nmodes));
     end
 end
 
@@ -136,7 +136,7 @@ lat = hycom.lat(1:nx,1:ny);
 depth = hycom.h(1:nx,1:ny); 
 
 %% Save output 
-save('eigentile.mat','lon','lat','depth','Ueig1','Ueig2','Ueig3','Ueig4',...
+save('eigentile_final.mat','lon','lat','depth','Ueig1','Ueig2','Ueig3','Ueig4',...
                      'Ueig5','k1','k2','k3','k4','k5')
-system(['mv eigentile.mat ' figpath '/']);
+system(['mv eigentile_final.mat ' figpath '/']);
 

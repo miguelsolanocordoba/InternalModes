@@ -33,6 +33,7 @@ N2 = -(9.81/1025)*(drho./dzc);  % brunt vaisala frequency
 N2 = [N2(1);N2;N2(end)];
 N2(N2<1e-10) = 1e-10; % Mask negative and very small values**
 
+
 % Compute parameters
 H = nansum(dz);
 N = numel(dz);
@@ -65,7 +66,8 @@ ll = size(A,1);
 %Cg = Ce.^2.*k/om;
 
 [W1,k2] = eig(A,B);
-k = abs(sqrt(diag(k2)));
+%k = abs(sqrt(diag(k2)));
+k = sqrt(diag(k2));
 [k,Is] = sort(k,'ascend');
 W1 = W1(:,Is);
 C  = om./k;
@@ -90,4 +92,4 @@ Ueig = Ueig2;
 Weig = W2;
 
 %% Save output in a structure
-S = struct('k',k,'L',L,'C',C,'Cg',Cg,'Weig',Weig,'Ueig',Ueig); 
+S = struct('N2',N2,'k',k,'L',L,'C',C,'Cg',Cg,'Weig',Weig,'Ueig',Ueig); 
