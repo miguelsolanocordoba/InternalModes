@@ -1,13 +1,22 @@
-function p = comp_pertpress(rho,dz) 
-%%COMP_PERTPRESS computes perturbation pressure from density
-% 
+function p = compute_pertpress(rho1,zc,zcmean,zfmean) 
+%%COMPUTE_PERTPRESS computes perturbation pressure from density
+%  
 %
 % Created: June 23, 2020 by M. Solano
 
-g = 9.8; % gravity  
+
+g = 9.806; % gravity  
 
 % Dimensions
-[nz,nt] = size(rho); 
+[nz,nt] = size(rho1); 
+
+% Compute mean density in time-mean layer
+%z = mean(zc,2); % time-mean layer
+dz = diff(zfmean);   % time-mean layer thickness
+rho = zeros(size(rho1)); 
+for i=1:nt
+    rho(:,i) = interp1(zc(:,i),rho1(:,i),zcmean);
+end
 rho_mean = mean(rho,2); 
 
 % Pre-allocate 
