@@ -26,8 +26,8 @@ figpath = '/data/msolano/figures/test';
 %% Read HYCOM variables
 hycom = read_hycom(); % !!!edit read_hycom.m to change tile!!! 
 [nx,ny,nz,nt] = size(hycom.rho); % tile size 
-nx = 100; % over-ride x-size 
-ny = 100; % over-ride y-size
+%nx = 100; % over-ride x-size 
+%ny = 100; % over-ride y-size
 dzi = 25; % layer thickness for uniform grid [m]
 
 % Constants
@@ -77,28 +77,34 @@ for ii = 1:nx
         zc = -flipud(zc1(1:nz,:)); 
         
         % Compute mean layer	
-        zf_mean = mean(zf,2); zc_mean = mean(zc,2); 
+        zf_mean = mean(zf,2); 
+	zc_mean = mean(zc,2); 
         dz = diff(zf_mean); 
         H = nansum(dz); % total depth  
         N = numel(dz);  % # of layers 
         
-        % Compute mean density 
+        % Interpolate density to time-mean layer and compute mean
         rho = flipud(squeeze(hycom.rho(ii,j,1:nz,:))); 
-        rho_mean = flipud(squeeze(mean(hycom.rho(ii,j,1:nz,:),4)));
-	rhof_mean = zeros(nz+1,1); 
-	for l = 1:nt
-	    rhof = interp1(zc(:,l),rho(:,l),zf(:,l),'linear','extrap');
-	end
-	rhof_mean = mean(rhof,2);  % mean density at faces 
+	rhoint = zeros(nz,nt);
+	for i = 1:nt
+	    rhoint(:,i) = interp1(zc(:,i),rho(:,i),zc_mean,'linear','extrap'); 
+        end
+        rho_mean = sort(mean(rhoint,2),'descend'); % mean sea-water density
+	rhof_mean = interp1(zc_mean,rho_mean,zf_mean,'linear','extrap');
+
+	% Compute perturbation pressure
+        pert = compute_pertpress(rho,zc,zf); % perturbation pressure
 
 %*****  Compute eigenfunctions 
 %% Case 1: WKB (Early) 
+% Input/output at faces for Weig. Ueig computed at centers. 
         im = InternalModes(rhof_mean+1000,zf_mean,zf_mean,hycom.lat(ii,j));
         [~,Weig1,~,k] = im.ModesAtFrequency(omega);
         Ueig1(ii,j,1:nz,:) = compute_ueig(Weig1(:,1:nmodes),dz);
 	k1(ii,j,:) = k(:,1:nmodes); clear k
 
 %% Case 2: FD (Early) 
+% Input/output at faces for Weig. Ueig computed at centers. 
         imFD = InternalModes(rhof_mean+1000,zf_mean,zf_mean,hycom.lat(ii,j),...
 	                     'method','finiteDifference',...
 			     'orderOfAccuracy',2);
@@ -107,22 +113,24 @@ for ii = 1:nx
 	k2(ii,j,:) = k(:,1:nmodes); clear k
         
 %% Case 3: FD (Oladeji W)
+% See compute_eigen for details
         S3 = compute_eigen(rho_mean,zf_mean,f,omega);
 	Ueig3(ii,j,1:nz,:) = S3.Ueig(:,1:nmodes); 
 	k3(ii,j,:) = S3.k(1:nmodes);
         	
 %% Case 4: FD (Oladeji U)
+% See compute_eigenU for details
         S4 = compute_eigenU(rho_mean,zf_mean,f,omega);
 	Ueig4(ii,j,1:nz,:) = S4.Ueig(:,1:nmodes); 
 	k4(ii,j,:) = S4.k(1:nmodes);
 
 %% Case 5: Uniform (Maarten)
+% Note: Uniform case uses stratification from Oladeji's function (already masked). 
 	nzM = round(H/dzi); % number of layers
         zfM = linspace(-H,0,nzM+1)';
         dz1 = diff(zfM);
         zcM = zfM(1:end-1) + dz1/2;
         N2M = interp1(zc_mean,S4.N2,zfM,'linear','extrap');
-%	N2M(N2M<0) = 1e-10; % Mask unstable (negative) stratification
         [~,~,L5,~,Ueig6t] = sturm_liouville_hyd_normalize(omega,sqrt(N2M),dz1(1),f);
         Ueig6t(:,2:2:end) = -Ueig6t(:,2:2:end);
 
@@ -136,7 +144,7 @@ lat = hycom.lat(1:nx,1:ny);
 depth = hycom.h(1:nx,1:ny); 
 
 %% Save output 
-save('eigentile_final.mat','lon','lat','depth','Ueig1','Ueig2','Ueig3','Ueig4',...
+save('eigentile_v1.mat','lon','lat','depth','Ueig1','Ueig2','Ueig3','Ueig4',...
                      'Ueig5','k1','k2','k3','k4','k5')
-system(['mv eigentile_final.mat ' figpath '/']);
+system(['mv eigentile_v1.mat ' figpath '/']);
 

@@ -27,12 +27,12 @@ addpath /home/mbui/Temp/forMiguel/funcs/
 
 %% Input Options
 % Location (=1 North Atlantic, =2 South Pacific)
-loc = 1;  locstr = num2str(loc); 
+loc = 3;  locstr = num2str(loc); 
 
 % plotting options (1=yes, 0=no)
-plotini = 1; % Stratification and filtering 
+plotini = 0; % Stratification and filtering 
 ploteig = 1; % Eigenvalues (Ueig,Weig) 
-plotfit = 1; % Velocity and fit (pcolor and time series)
+plotfit = 0; % Velocity and fit (pcolor and time series)
 plotsta = 1; % Statistics (R2 and S2)
 fntsz = 6;   % legend font size 
 
@@ -50,7 +50,6 @@ vfiltint = profile.vfiltint;
 
 %% Cases
 cname = {'WKB','FD (Early)','FD (Early U)','FD (Oladeji)','FD (Oladeji U)','Uniform'};
-%cname = {'WKB','FD Early (no mask)','FD Early (with mask)','FD (Oladeji)','FD (Oladeji U)','Uniform'};
 
 %% Initialize
 % Dimensions and constants
@@ -72,13 +71,10 @@ H = nansum(dz);        % total depth
 N = numel(dz);         % number of layers 
 
 % Density and latitude
-rho_mean = profile.rho_mean;  % Mean density 
+rho_mean = sort(profile.rho_mean,'descend');  % Mean density 
+%rho_mean = profile.rho_mean;  % Mean density 
 lat = profile.latitude;  % Latitude 
 rhof_mean = interp1(zc,rho_mean,zf,'linear','extrap');
-
-% Interpolate density
-%rhof_mean2 = interp1([zf(1:end-8); zf(end)],[rhof_mean(1:end-8); rhof_mean(end)],zf);
-%rho_mean2 = interp1([zc(1:end-8); zc(end)],[rho_mean(1:end-8); rho_mean(end)],zf);
 
 % Input/Output grids
 zIn = zc; 
@@ -196,10 +192,9 @@ fprintf('\nOladeji = %4.4f[m/s]',C4(1))
 fprintf('\nJeffrey = %4.4f[m/s]',C3(1))
 fprintf('\nMaarten = %4.4f[m/s]\n',C6(1))
 
-%fprintf('\nMode 1 eigen-speed (C)')
-%fprintf('\nOladeji = %4.4f[m/s]',Ce4(1))
-%fprintf('\nJeffrey = %4.4f[m/s]\n',Ce2(1))
-
+fprintf('\nMode 1 eigen-speed (C)')
+fprintf('\nOladeji = %4.4f[m/s]',Ce4(1))
+fprintf('\nJeffrey = %4.4f[m/s]\n',Ce2(1))
 
 
 %% Mode fitting and statistics
@@ -207,40 +202,28 @@ fprintf('\nMaarten = %4.4f[m/s]\n',C6(1))
 nmodes = 5; 
 
 % CASE 1
-%[SS_tot,SS_res1,SS_fit,r2u1,s2u1,u1] = compute_modfit2(ufiltint,dz,Ueig1,nmodes); 
-%[SS_tot,SS_res1,SS_fit,r2v1,s2v1,v1] = compute_modfit2(vfiltint,dz,Ueig1,nmodes); 
 [r2u1,u1] = compute_modfit(ufiltint,dz,Ueig1,nmodes); 
 [r2v1,v1] = compute_modfit(vfiltint,dz,Ueig1,nmodes); 
 
 % CASE 2
-%[SS_tot,SS_res2,SS_fit,r2u2,s2u2,u2] = compute_modfit2(ufiltint,dz,Ueig2,nmodes); 
-%[SS_tot,SS_res2,SS_fit,r2v2,s2v2,v2] = compute_modfit2(vfiltint,dz,Ueig2,nmodes); 
 [r2u2,u2] = compute_modfit(ufiltint,dz,Ueig2,nmodes); 
 [r2v2,v2] = compute_modfit(vfiltint,dz,Ueig2,nmodes); 
 
 % CASE 3
-%[SS_tot,SS_res3,SS_fit,r2u3,s2u3,u3] = compute_modfit2(ufiltint,dz,Ueig3,nmodes); 
-%[SS_tot,SS_res3,SS_fit,r2v3,s2v3,v3] = compute_modfit2(vfiltint,dz,Ueig3,nmodes); 
 [r2u3,u3] = compute_modfit(ufiltint,dz,Ueig3,nmodes); 
 [r2v3,v3] = compute_modfit(vfiltint,dz,Ueig3,nmodes); 
 
 % CASE 4
-%[SS_tot,SS_res4,SS_fit,r2u4,s2u4,u4] = compute_modfit2(ufiltint,dz,Ueig4,nmodes); 
-%[SS_tot,SS_res4,SS_fit,r2v4,s2v4,v4] = compute_modfit2(vfiltint,dz,Ueig4,nmodes); 
 [r2u4,u4] = compute_modfit(ufiltint,dz,Ueig4,nmodes); 
 [r2v4,v4] = compute_modfit(vfiltint,dz,Ueig4,nmodes); 
 
 % CASE 5
-%[SS_tot,SS_res5,SS_fit,r2u5,s2u5,u5] = compute_modfit2(ufiltint,dz,Ueig5,nmodes); 
-%[SS_tot,SS_res5,SS_fit,r2v5,s2v5,v5] = compute_modfit2(vfiltint,dz,Ueig5,nmodes); 
 [r2u5,u5] = compute_modfit(ufiltint,dz,Ueig5,nmodes); 
 [r2v5,v5] = compute_modfit(vfiltint,dz,Ueig5,nmodes); 
 
 % CASE 6
-%[SS_tot,SS_res6,SS_fit,r2u6,s2u6,u6] = compute_modfit2(ufiltM,dz1,Ueig6,nmodes); 
-%[SS_tot,SS_res6,SS_fit,r2v6,s2v6,v6] = compute_modfit2(vfiltM,dz1,Ueig6,nmodes); 
-[r2u6,u6] = compute_modfit2(ufiltM,dz1,Ueig6,nmodes); 
-[r2v6,v6] = compute_modfit2(vfiltM,dz1,Ueig6,nmodes); 
+[r2u6,u6] = compute_modfit(ufiltM,dz1,Ueig6,nmodes); 
+[r2v6,v6] = compute_modfit(vfiltM,dz1,Ueig6,nmodes); 
 
 % Fit of all modes (1 to nmodes)
 ufit1 = sum(u1,3); vfit1 = sum(v1,3); 
@@ -639,20 +622,20 @@ if plotsta
 
 figure
 subplot(121)
-bar([r2u1 r2u2 r2u4 r2u5])
+bar([r2u1 r2u2 r2u4 r2u5 r2u6])
 title(['R^2 (u) at location ' locstr]); 
 xlabel('Modes'); ylabel('R^2'); pbaspect([1.5 1 1]) 
 set(gca,'FontSize',fntsz); xticklabels({'1','1-2','1-3','1-4','1-5'});
-legend(cname{1},cname{2},cname{4},cname{5},...
-       'Position',[0.17 0.65 0.06 0.05],'FontSize',5,'Box','off')
+legend(cname{1},cname{2},cname{4},cname{5},cname{6},...
+       'Position',[0.17 0.59 0.06 0.05],'FontSize',5,'Box','off')
 
 subplot(122)
-bar([r2v1 r2v2 r2v4 r2v5])
+bar([r2v1 r2v2 r2v4 r2v5 r2v6])
 title(['R^2 (v) at location ' locstr]); 
 xlabel('Modes'); ylabel('R^2'); pbaspect([1.5 1 1]) 
 set(gca,'FontSize',fntsz); xticklabels({'1','1-2','1-3','1-4','1-5'});
-legend(cname{1},cname{2},cname{4},cname{5},...
-       'Position',[0.65 0.65 0.06 0.05],'FontSize',5,'Box','off')
+legend(cname{1},cname{2},cname{4},cname{5},cname{6},...
+       'Position',[0.6 0.59 0.06 0.05],'FontSize',5,'Box','off')
 print('r2.png','-r300','-dpng') 
 
 
