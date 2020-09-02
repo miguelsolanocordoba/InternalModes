@@ -22,14 +22,14 @@ addpath /data/msolano/Matlab
 % loc1 > runnum=221;  blki=27; blkj=45;
 % loc2 > runnum=190;  blki=15; blkj=25; 
 
-runnum = 221;
+runnum = 190;
 runnumstr = num2str(runnum);
-blki=27;
-blkj=45;
+blki=15;
+blkj=25;
 
 % Directories
-dirin = '/data2/mbui/for_keshav/tiles/'; % loc1
-%dirin = '/data2/msolano/forEmanuel/hycom/GLBc0.04/expt_19.0/'; 
+%dirin = '/data2/mbui/for_keshav/tiles/'; % loc1
+dirin = '/data2/msolano/forEmanuel/hycom/GLBc0.04/expt_19.0/'; 
 
 fprintf('\nReading HYCOM files (read_hycom)\n')
 fprintf('Input directory: %s\n',dirin)

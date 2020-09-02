@@ -85,13 +85,13 @@ f = imf.f0;
 
 %% Mask N2 and re-compute rho_mean
 % Method 1 (N2 at faces, rho at centers)
-[N2mod,rho_meanmod] = N2mask(rho_mean,imf.N2,dz);
+dzc = diff(zc); 
+[N2mod,rho_meanmod] = N2mask(rho_mean,imf.N2,dzc);
 rhof_meanmod = interp1(zc,rho_meanmod,zf,'linear','extrap');
 im = InternalModes(rhof_meanmod,zf,zf,lat);
 
 % Method 2 (N2 at centers, rho at faces) 
-dzc = diff(zc); 
-[N2mod2,rhof_meanmod2] = N2maskf(rhof_mean,imU.N2,dzc);
+[N2mod2,rhof_meanmod2] = N2maskf(rhof_mean,imU.N2,dz);
 rho_meanmod2 = interp1(zf,rhof_meanmod2,zc,'linear','extrap');
 im2 = InternalModes(rhof_meanmod2,zf,zf,lat);
 
@@ -104,7 +104,7 @@ title('Density'); xlabel('\rho [kg/m^3]'); ylabel('Depth [m]')
 legend('Original','Modified')
 ylim([-H 0]);
 subplot(122)
-semilogx(N2,zf,'k'); hold on
+semilogx(imf.N2,zf,'k'); hold on
 semilogx(N2mod,zf,'b');
 semilogx(im.N2,zf,'r');
 title('Stratification'); xlabel('N^2'); ylabel('Depth [m]')
@@ -120,9 +120,9 @@ title('Density'); xlabel('\rho [kg/m^3]'); ylabel('Depth [m]')
 legend('Original','Modified')
 ylim([-H 0]);
 subplot(122)
-semilogx(N2,zf,'k'); hold on
+semilogx(imf.N2,zf,'k'); hold on
 semilogx(N2mod2,zc,'b');
-semilogx(im2.N2,zc,'r');
+semilogx(im2.N2,zf,'r');
 title('Stratification'); xlabel('N^2'); ylabel('Depth [m]')
 ylim([-H 0]);
 legend('Original','Masked','Early','Location','SouthWest')
