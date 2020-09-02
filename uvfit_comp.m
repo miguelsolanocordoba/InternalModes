@@ -71,21 +71,67 @@ H = nansum(dz);        % total depth
 N = numel(dz);         % number of layers 
 
 % Density and latitude
-rho_mean = sort(profile.rho_mean,'descend');  % Mean density 
-%rho_mean = profile.rho_mean;  % Mean density 
+%rho_mean = sort(profile.rho_mean,'descend');  % Mean density 
+rho_mean = profile.rho_mean+1000;  % Mean sea-water density 
 lat = profile.latitude;  % Latitude 
 rhof_mean = interp1(zc,rho_mean,zf,'linear','extrap');
 
-% Input/Output grids
-zIn = zc; 
-zOut = zf; 
-
 % Initilized Early's InternalModes
-imWKB = InternalModes(rhof_mean+1000,zOut,zOut,lat)
-imf = InternalModes(rhof_mean+1000,zOut,zOut,lat,'method','finiteDifference')
-imU = InternalModes(rho_mean+1000,zIn,zIn,lat,'method','finiteDifference')
+imWKB = InternalModes(rhof_mean,zf,zf,lat);
+imf = InternalModes(rhof_mean,zf,zf,lat,'method','finiteDifference');
+imU = InternalModes(rho_mean,zc,zc,lat,'method','finiteDifference');
 
 f = imf.f0; 
+
+%% Mask N2 and re-compute rho_mean
+% Method 1 (N2 at faces, rho at centers)
+[N2mod,rho_meanmod] = N2mask(rho_mean,imf.N2,dz);
+rhof_meanmod = interp1(zc,rho_meanmod,zf,'linear','extrap');
+im = InternalModes(rhof_meanmod,zf,zf,lat);
+
+% Method 2 (N2 at centers, rho at faces) 
+dzc = diff(zc); 
+[N2mod2,rhof_meanmod2] = N2maskf(rhof_mean,imU.N2,dzc);
+rho_meanmod2 = interp1(zf,rhof_meanmod2,zc,'linear','extrap');
+im2 = InternalModes(rhof_meanmod2,zf,zf,lat);
+
+  
+figure
+subplot(121)
+plot(rho_mean,zc,'k'); hold on 
+plot(rho_meanmod,zc,'b');
+title('Density'); xlabel('\rho [kg/m^3]'); ylabel('Depth [m]')
+legend('Original','Modified')
+ylim([-H 0]);
+subplot(122)
+semilogx(N2,zf,'k'); hold on
+semilogx(N2mod,zf,'b');
+semilogx(im.N2,zf,'r');
+title('Stratification'); xlabel('N^2'); ylabel('Depth [m]')
+ylim([-H 0]);
+legend('Original','Masked','Early','Location','SouthWest')
+print('stratification1.png','-r300','-dpng')
+
+figure
+subplot(121)
+plot(rho_mean,zc,'k'); hold on
+plot(rhof_meanmod2,zf,'b');
+title('Density'); xlabel('\rho [kg/m^3]'); ylabel('Depth [m]')
+legend('Original','Modified')
+ylim([-H 0]);
+subplot(122)
+semilogx(N2,zf,'k'); hold on
+semilogx(N2mod2,zc,'b');
+semilogx(im2.N2,zc,'r');
+title('Stratification'); xlabel('N^2'); ylabel('Depth [m]')
+ylim([-H 0]);
+legend('Original','Masked','Early','Location','SouthWest')
+print('stratification2.png','-r300','-dpng')
+
+system(['rm ' dirout '*.png']);
+system(['mv *.png ' dirout]);
+
+return
 
 %% Compute eigenmodes
 % *All cases are interpolated to time-mean layer
@@ -243,8 +289,8 @@ if plotini
 % Stratification
 figure
 subplot(121)
-plot(imf.rho,imf.z,'r'); 
-title('Density'); xlabel('\sigma_2 [kg/m^3'); ylabel('Depth [m]')
+plot(imf.rho+1000,imf.z,'r'); 
+title('Density'); xlabel('\rho [kg/m^3]'); ylabel('Depth [m]')
 ylim([-H 0]);
 subplot(122)
 semilogx(imf.N2,imf.z,'k'); hold on
@@ -411,7 +457,7 @@ end % if ploteig
 %% plotfit: fitted velocities vs original velocities
 if plotfit 
 
-[x,y] = meshgrid(t,zIn); 
+[x,y] = meshgrid(t,zc); 
 [x1,y1] = meshgrid(t,zcM); 
 cmin = -0.04; cmax = 0.04; 
 ymin = -H; 
