@@ -13,7 +13,7 @@ set(0,'defaultAxesFontSize',6)
 %% Paths
 addpath /data/msolano/forOladeji % Matfiles (data)
 addpath /data/msolano/Matlab    v% All functions!
-addpath /data/msolano/toolbox/InternalModes
+addpath /data/msolano/toolbox/GLOceanKit/Matlab/InternalModes
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/BSpline
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/Distributions
 

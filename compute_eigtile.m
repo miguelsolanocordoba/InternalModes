@@ -17,7 +17,7 @@ set(0,'defaultAxesFontSize',6)
 warning('off'); 
 
 addpath /data/msolano/Matlab/ocean_physics
-addpath /data/msolano/toolbox/InternalModes
+addpath /data/msolano/toolbox/GLOceanKit/Matlab/InternalModes
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/BSpline
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/Distributions
 addpath /home/mbui/Temp/forMiguel/funcs/

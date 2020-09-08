@@ -38,7 +38,7 @@ set(groot,'defaultLineLineWidth',2);
 % Paths 
 addpath /data/msolano/Matlab/ocean_physics
 addpath /data/msolano/matfiles
-addpath /data/msolano/toolbox/InternalModes
+addpath /data/msolano/toolbox/GLOceanKit/Matlab/InternalModes
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/BSpline
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/Distributions
 addpath /home/mbui/Temp/forMiguel/funcs/
