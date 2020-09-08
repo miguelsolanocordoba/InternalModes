@@ -6,7 +6,7 @@ clc; clear; close all;
 %
 % INPUT OPTIONS: (=1 plot, =0 no plot) 
 % plotini => plots density, stratification freq. and filtering.
-% ploteig => plots horizontal eigenvalues (Ueig)
+% ploteig => plots horizontal eigenvalues ()
 % plotfit => plots harmonic fit (pcolor and time-series)
 % plotsta => plots statistics
 % 
@@ -30,9 +30,9 @@ addpath /home/mbui/Temp/forMiguel/funcs/
 loc = 3;  locstr = num2str(loc); 
 
 % plotting options (1=yes, 0=no)
-plotini = 0; % Stratification and filtering 
-ploteig = 1; % Eigenvalues (Ueig,Weig) 
-plotfit = 0; % Velocity and fit (pcolor and time series)
+plotini = 1; % Stratification and filtering 
+ploteig = 1; % Eigenvalues (,Weig) 
+plotfit = 1; % Velocity and fit (pcolor and time series)
 plotsta = 1; % Statistics (R2 and S2)
 fntsz = 6;   % legend font size 
 
@@ -71,7 +71,7 @@ H = nansum(dz);        % total depth
 N = numel(dz);         % number of layers 
 
 % Density and latitude
-%rho_mean = sort(profile.rho_mean,'descend');  % Mean density 
+%rho_mean = sort(profile.rho_mean,'descend')+1000;  % Mean density 
 rho_mean = profile.rho_mean+1000;  % Mean sea-water density 
 lat = profile.latitude;  % Latitude 
 rhof_mean = interp1(zc,rho_mean,zf,'linear','extrap');
@@ -81,7 +81,15 @@ imWKB = InternalModes(rhof_mean,zf,zf,lat);
 imf = InternalModes(rhof_mean,zf,zf,lat,'method','finiteDifference');
 imU = InternalModes(rho_mean,zc,zc,lat,'method','finiteDifference');
 
-f = imf.f0; 
+f = imU.f0; 
+
+N2 = imU.N2; 
+N2(end)=N2(end-1);
+imU2 = InternalModes(N2,zc,zc,lat,'method','finiteDifference',...
+                     'N2',1,'rho0',imf.rho0);
+
+imU.N2-imU2.N2
+
 
 %% Mask N2 and re-compute rho_mean
 % Method 1 (N2 at faces, rho at centers)
@@ -89,13 +97,13 @@ dzc = diff(zc);
 [N2mod,rho_meanmod] = N2mask(rho_mean,imf.N2,dzc);
 rhof_meanmod = interp1(zc,rho_meanmod,zf,'linear','extrap');
 im = InternalModes(rhof_meanmod,zf,zf,lat);
-
-% Method 2 (N2 at centers, rho at faces) 
-[N2mod2,rhof_meanmod2] = N2maskf(rhof_mean,imU.N2,dz);
-rho_meanmod2 = interp1(zf,rhof_meanmod2,zc,'linear','extrap');
-im2 = InternalModes(rhof_meanmod2,zf,zf,lat);
-
-  
+%
+%% Method 2 (N2 at centers, rho at faces) 
+%[N2mod2,rhof_meanmod2] = N2maskf(rhof_mean,imU.N2,dz);
+%rho_meanmod2 = interp1(zf,rhof_meanmod2,zc,'linear','extrap');
+%im2 = InternalModes(rhof_meanmod2,zf,zf,lat);
+%
+%  
 figure
 subplot(121)
 plot(rho_mean,zc,'k'); hold on 
@@ -111,27 +119,26 @@ title('Stratification'); xlabel('N^2'); ylabel('Depth [m]')
 ylim([-H 0]);
 legend('Original','Masked','Early','Location','SouthWest')
 print('stratification1.png','-r300','-dpng')
+%
+%figure
+%subplot(121)
+%plot(rho_mean,zc,'k'); hold on
+%plot(rhof_meanmod2,zf,'b');
+%title('Density'); xlabel('\rho [kg/m^3]'); ylabel('Depth [m]')
+%legend('Original','Modified')
+%ylim([-H 0]);
+%subplot(122)
+%semilogx(imf.N2,zf,'k'); hold on
+%semilogx(N2mod2,zc,'b');
+%semilogx(im2.N2,zf,'r');
+%title('Stratification'); xlabel('N^2'); ylabel('Depth [m]')
+%ylim([-H 0]);
+%legend('Original','Masked','Early','Location','SouthWest')
+%print('stratification2.png','-r300','-dpng')
+%
+%system(['rm ' dirout '*.png']);
+%system(['mv *.png ' dirout]);
 
-figure
-subplot(121)
-plot(rho_mean,zc,'k'); hold on
-plot(rhof_meanmod2,zf,'b');
-title('Density'); xlabel('\rho [kg/m^3]'); ylabel('Depth [m]')
-legend('Original','Modified')
-ylim([-H 0]);
-subplot(122)
-semilogx(imf.N2,zf,'k'); hold on
-semilogx(N2mod2,zc,'b');
-semilogx(im2.N2,zf,'r');
-title('Stratification'); xlabel('N^2'); ylabel('Depth [m]')
-ylim([-H 0]);
-legend('Original','Masked','Early','Location','SouthWest')
-print('stratification2.png','-r300','-dpng')
-
-system(['rm ' dirout '*.png']);
-system(['mv *.png ' dirout]);
-
-return
 
 %% Compute eigenmodes
 % *All cases are interpolated to time-mean layer
@@ -159,16 +166,16 @@ Cg2 = (omega^2-f^2)./(omega*k2);                 % group-speed
 %Ce2 = sqrt(omega^2-f^2)./(k2.^2);                % eigen-speed
 Ce2 = sqrt(g*h2);
 
-%% Case 3: FD Ueig (Early) 
+%% Case 3: FD  (Early) 
 % Eigenfunctions
 imU.normalization = 'wMax';
-[Ueigt,~,h3,k3] = imU.ModesAtFrequency(omega);   % omega-const EVP
+[t,~,h3,k3] = imU.ModesAtFrequency(omega);   % omega-const EVP
 
 dzu = repmat(dz,[1,size(dz,1)]);
-AA = repmat(sum(Ueigt.^2.*dzu,1)./H,[N 1]).^(1/2);
+AA = repmat(sum(t.^2.*dzu,1)./H,[N 1]).^(1/2);
 AA(AA==0) = Inf;
-Ueig = Ueigt./AA;
-Ueig(:,Ueig(N,:)<0) = -Ueig(:,Ueig(N,:)<0);
+ = Ueigt./AA;
+(:,Ueig(N,:)<0) = -Ueig(:,Ueig(N,:)<0);
 Ueig3 = Ueig;
 
 % Eigenvalues
@@ -188,7 +195,7 @@ Cg4 = S.Cg;
 k4 = S.k;
 Ce4 = sqrt(omega^2-f^2)./(k4.^2);                % eigen-speed
 
-%% Case 5: FD Ueig (Oladeji) 
+%% Case 5: FD  (Oladeji) 
 % Eigenfunctions
 S = compute_eigenU(rho_mean,zf,f,omega); 
 Ueig5 = S.Ueig;
@@ -328,7 +335,7 @@ print('filtering.png','-r300','-dpng')
 end % if plotini
 
 
-%% ploteig: eigenfunctions (Ueig, Weig)
+%% ploteig: eigenfunctions (, Weig)
 if ploteig
 %ymin = -100;
 %figure;
@@ -343,8 +350,8 @@ if ploteig
 %       'Position',[0.045 0.27 0.06 0.1],'FontSize',5)
 %
 %subplot(162)
-%%plot(Ueig1(:,1),zc,'k','LineWidth',2.5); hold on
-%plot(Ueig2(:,1)-Ueig3(:,1),zc,'b'); hold on
+%%plot(1(:,1),zc,'k','LineWidth',2.5); hold on
+%plot(2(:,1)-Ueig3(:,1),zc,'b'); hold on
 %plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
 %title('Mode 1'); xlabel('U_{eig}');% ylabel('Depth [m]');
 %yticklabels('off')
@@ -352,32 +359,32 @@ if ploteig
 %%legend(cname{1},cname{2},cname{4},cname{6},'Box','on',...
 %
 %subplot(163)
-%%plot(Ueig1(:,2),zc,'k','LineWidth',2.5); hold on
-%plot(Ueig2(:,2)-Ueig3(:,2),zc,'b'); hold on
+%%plot(1(:,2),zc,'k','LineWidth',2.5); hold on
+%plot(2(:,2)-Ueig3(:,2),zc,'b'); hold on
 %plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
 %title('Mode 2'); xlabel('U_{eig}'); %ylabel('Depth [m]');
 %axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
 %yticklabels([])
 %
 %subplot(164)
-%%plot(Ueig1(:,3),zc,'k','LineWidth',2.5); hold on
-%plot(Ueig2(:,3)-Ueig3(:,3),zc,'b'); hold on
+%%plot(1(:,3),zc,'k','LineWidth',2.5); hold on
+%plot(2(:,3)-Ueig3(:,3),zc,'b'); hold on
 %plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
 %title('Mode 3'); xlabel('U_{eig}'); %ylabel('Depth [m]');
 %axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
 %yticklabels([])
 %
 %subplot(165)
-%%plot(Ueig1(:,4),zc,'k','LineWidth',2.5); hold on
-%plot(Ueig2(:,4)-Ueig3(:,4),zc,'b'); hold on
+%%plot(1(:,4),zc,'k','LineWidth',2.5); hold on
+%plot(2(:,4)-Ueig3(:,4),zc,'b'); hold on
 %plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
 %title('Mode 4'); xlabel('U_{eig}');% ylabel('Depth [m]');
 %axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
 %yticklabels([])
 %
 %subplot(166)
-%%plot(Ueig1(:,5),zc,'k','LineWidth',2.5); hold on
-%plot(Ueig2(:,5)-Ueig3(:,5),zc,'b'); hold on
+%%plot(1(:,5),zc,'k','LineWidth',2.5); hold on
+%plot(2(:,5)-Ueig3(:,5),zc,'b'); hold on
 %plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
 %title('Mode 5'); xlabel('U_{eig}');% ylabel('Depth [m]');
 %axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
@@ -385,8 +392,8 @@ if ploteig
 
 figure;
 subplot(161)
-semilogx(sqrt(imf.N2),imf.z,'k'); hold on
-semilogx(sqrt(N2M),zfM,'b'); 
+semilogx(imf.N2,imf.z,'k'); hold on
+semilogx(N2M,zfM,'b'); 
 %plot(imf.N2,imf.z,'k'); hold on
 %semilogx(sqrt(N2M),zfM,'b'); hold on
 title('Stratification'); xlabel('N^2 [1/s^2]'); ylabel('Depth [m]')
@@ -396,7 +403,7 @@ ylim([ymin 0]); yticklabels([])
 subplot(162)
 plot(Ueig1(:,1),zc,'k','LineWidth',2.5); hold on
 plot(Ueig2(:,1),zc,'b'); hold on
-%plot(Ueig3(:,1),zc,'r');
+plot(Ueig3(:,1),zc,'r');
 plot(Ueig4(:,1),zc,'--r');
 plot(Ueig6(:,1),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
@@ -409,7 +416,7 @@ legend(cname{1},cname{2},cname{4},cname{6},'Box','on',...
 subplot(163)
 plot(Ueig1(:,2),zc,'k','LineWidth',2.5); hold on
 plot(Ueig2(:,2),zc,'b'); 
-%plot(Ueig3(:,2),zc,'r');
+plot(Ueig3(:,2),zc,'r');
 plot(Ueig4(:,2),zc,'--r');
 plot(Ueig6(:,2),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
@@ -420,7 +427,7 @@ yticklabels([])
 subplot(164)
 plot(Ueig1(:,3),zc,'k','LineWidth',2.5); hold on
 plot(Ueig2(:,3),zc,'b');
-%plot(Ueig3(:,3),zc,'r');
+plot(Ueig3(:,3),zc,'r');
 plot(Ueig4(:,3),zc,'--r');
 plot(Ueig6(:,3),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
@@ -431,7 +438,7 @@ yticklabels([])
 subplot(165)
 plot(Ueig1(:,4),zc,'k','LineWidth',2.5); hold on
 plot(Ueig2(:,4),zc,'b');
-%plot(Ueig3(:,4),zc,'r');
+plot(Ueig3(:,4),zc,'r');
 plot(Ueig4(:,4),zc,'--r');
 plot(Ueig6(:,4),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
@@ -442,7 +449,7 @@ yticklabels([])
 subplot(166)
 plot(Ueig1(:,5),zc,'k','LineWidth',2.5); hold on
 plot(Ueig2(:,5),zc,'b'); 
-%plot(Ueig3(:,5),zc,'r');
+plot(Ueig3(:,5),zc,'r');
 plot(Ueig4(:,5),zc,'--r');
 plot(Ueig6(:,5),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
@@ -450,7 +457,7 @@ title('Mode 5'); xlabel('U_{eig}');% ylabel('Depth [m]');
 axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
 yticklabels([])
 
-print('Ueig.png','-r300','-dpng')
+print('.png','-r300','-dpng')
 
 end % if ploteig
 
@@ -493,8 +500,8 @@ ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
 
 subplot(515)
-pcolor(x,y,ufit5); shading flat; colorbar; caxis([cmin cmax])
-title([cname{5}])
+pcolor(x1,y1,ufit6); shading flat; colorbar; caxis([cmin cmax])
+title([cname{6}])
 datetick('x','dd'); xlim([t(1) t(end)]); 
 xlabel('Days since Sept. 1, 2016','FontSize',8)
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
@@ -506,32 +513,33 @@ print('ufit_vs_uiso.png','-r300','-dpng')
 figure; colormap('jet')
 subplot(511)
 pcolor(x,y,vfilt); shading flat; colorbar; caxis([cmin cmax])
-title('Band-passed V_{iso}'); 
+title('Band-passed northward velocity (v_{iso})'); 
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(512)
 pcolor(x,y,vfit1); shading flat; colorbar; caxis([cmin cmax])
-title(['V_{fit} for ' cname{1}])
+title([cname{1}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(513)
 pcolor(x,y,vfit2); shading flat; colorbar; caxis([cmin cmax])
-title(['V_{fit} for ' cname{2}])
+title([cname{2}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(514)
 pcolor(x,y,vfit4); shading flat; colorbar; caxis([cmin cmax])
-title(['V_{fit} for ' cname{4}])
+title([cname{4}])
 datetick('x','dd'); xlim([t(1) t(end)])
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 subplot(515)
-pcolor(x,y,vfit5); shading flat; colorbar; caxis([cmin cmax])
-title(['V_{fit} for ' cname{6}])
+pcolor(x1,y1,vfit6); shading flat; colorbar; caxis([cmin cmax])
+title([cname{6}])
 datetick('x','dd'); xlim([t(1) t(end)])
+xlabel('Days since Sept. 1, 2016','FontSize',8)
 ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
 
 print('vfit_vs_viso.png','-r300','-dpng')
@@ -668,7 +676,7 @@ if plotsta
 
 figure
 subplot(121)
-bar([r2u1 r2u2 r2u4 r2u5 r2u6])
+bar([r2u1 r2u2 r2u4 r2u6])
 title(['R^2 (u) at location ' locstr]); 
 xlabel('Modes'); ylabel('R^2'); pbaspect([1.5 1 1]) 
 set(gca,'FontSize',fntsz); xticklabels({'1','1-2','1-3','1-4','1-5'});
@@ -676,11 +684,11 @@ legend(cname{1},cname{2},cname{4},cname{5},cname{6},...
        'Position',[0.17 0.59 0.06 0.05],'FontSize',5,'Box','off')
 
 subplot(122)
-bar([r2v1 r2v2 r2v4 r2v5 r2v6])
+bar([r2v1 r2v2 r2v4 r2v6])
 title(['R^2 (v) at location ' locstr]); 
 xlabel('Modes'); ylabel('R^2'); pbaspect([1.5 1 1]) 
 set(gca,'FontSize',fntsz); xticklabels({'1','1-2','1-3','1-4','1-5'});
-legend(cname{1},cname{2},cname{4},cname{5},cname{6},...
+legend(cname{1},cname{2},cname{4},cname{6},...
        'Position',[0.6 0.59 0.06 0.05],'FontSize',5,'Box','off')
 print('r2.png','-r300','-dpng') 
 

@@ -31,7 +31,7 @@ drho = rho(2:end) - rho(1:end-1);
 dzc = zc(2:end) - zc(1:end-1);
 N2 = -(9.81/1025)*(drho./dzc);  % brunt vaisala frequency
 N2 = [N2(1);N2;N2(end)];
-N2(N2<1e-10) = 1e-10; % Mask negative and very small values**
+%N2(N2<1e-10) = 1e-10; % Mask negative and very small values**
 
 
 % Compute parameters

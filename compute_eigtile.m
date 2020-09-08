@@ -21,7 +21,7 @@ addpath /data/msolano/toolbox/InternalModes
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/BSpline
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/Distributions
 addpath /home/mbui/Temp/forMiguel/funcs/
-figpath = '/data/msolano/figures/test';
+figpath = '/data/msolano/matfiles';
 
 %% Read HYCOM variables
 hycom = read_hycom(); % !!!edit read_hycom.m to change tile!!! 
@@ -89,7 +89,13 @@ for ii = 1:nx
 	for i = 1:nt
 	    rhoint(:,i) = interp1(zc(:,i),rho(:,i),zc_mean,'linear','extrap'); 
         end
-        rho_mean = sort(mean(rhoint,2),'descend'); % mean sea-water density
+        %rho_mean = sort(mean(rhoint,2),'descend'); % mean sea-water density
+        rho_meant = mean(rhoint,2)+1000; % mean sea-water density
+	rhof_meant = interp1(zc_mean,rho_meant,zf_mean,'linear','extrap');
+
+	% Mask rho
+        im = InternalModes(rhof_meant,zf_mean,zf_mean,hycom.lat(ii,j));
+	[N2,rho_mean] = N2mask(rho_meant,im.N2,diff(zc_mean));
 	rhof_mean = interp1(zc_mean,rho_mean,zf_mean,'linear','extrap');
 
 	% Compute perturbation pressure
@@ -98,14 +104,14 @@ for ii = 1:nx
 %*****  Compute eigenfunctions 
 %% Case 1: WKB (Early) 
 % Input/output at faces for Weig. Ueig computed at centers. 
-        im = InternalModes(rhof_mean+1000,zf_mean,zf_mean,hycom.lat(ii,j));
+        im = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(ii,j));
         [~,Weig1,~,k] = im.ModesAtFrequency(omega);
         Ueig1(ii,j,1:nz,:) = compute_ueig(Weig1(:,1:nmodes),dz);
 	k1(ii,j,:) = k(:,1:nmodes); clear k
 
 %% Case 2: FD (Early) 
 % Input/output at faces for Weig. Ueig computed at centers. 
-        imFD = InternalModes(rhof_mean+1000,zf_mean,zf_mean,hycom.lat(ii,j),...
+        imFD = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(ii,j),...
 	                     'method','finiteDifference',...
 			     'orderOfAccuracy',2);
 	[~,Weig2,~,k] = imFD.ModesAtFrequency(omega); 
@@ -144,7 +150,7 @@ lat = hycom.lat(1:nx,1:ny);
 depth = hycom.h(1:nx,1:ny); 
 
 %% Save output 
-save('eigentile2_v1.mat','lon','lat','depth','Ueig1','Ueig2','Ueig3','Ueig4',...
+save('eigentile_v2.mat','lon','lat','depth','Ueig1','Ueig2','Ueig3','Ueig4',...
                      'Ueig5','k1','k2','k3','k4','k5')
-system(['mv eigentile2_v1.mat ' figpath '/']);
+system(['mv eigentile_v2.mat ' figpath '/']);
 
