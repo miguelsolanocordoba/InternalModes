@@ -169,13 +169,13 @@ Ce2 = sqrt(g*h2);
 %% Case 3: FD  (Early) 
 % Eigenfunctions
 imU.normalization = 'wMax';
-[t,~,h3,k3] = imU.ModesAtFrequency(omega);   % omega-const EVP
+[Ueigt,~,h3,k3] = imU.ModesAtFrequency(omega);   % omega-const EVP
 
 dzu = repmat(dz,[1,size(dz,1)]);
-AA = repmat(sum(t.^2.*dzu,1)./H,[N 1]).^(1/2);
+AA = repmat(sum(Ueigt.^2.*dzu,1)./H,[N 1]).^(1/2);
 AA(AA==0) = Inf;
- = Ueigt./AA;
-(:,Ueig(N,:)<0) = -Ueig(:,Ueig(N,:)<0);
+Ueig = Ueigt./AA;
+Ueig(:,Ueig(N,:)<0) = -Ueig(:,Ueig(N,:)<0);
 Ueig3 = Ueig;
 
 % Eigenvalues
