@@ -1,4 +1,4 @@
-function S = compute_eigen(rho,zf,f,om)
+function S = compute_eigen(rho,rho0,zf,f,om)
 %S = COMPUTE_EIGEN computes eigenvalues using Ashok & Bhaduria (2009)
 %
 % S=COMPUTE_EIGEN(rho,zf,f,om) solves the omega-constant eigenvalue problem 
@@ -29,7 +29,7 @@ dz = -diff(zf); % layer thickness vector (top to bottom)
 zc = zf(1:end-1)/2 + zf(2:end)/2; % layer centers' depth vector
 drho = rho(2:end) - rho(1:end-1);
 dzc = zc(2:end) - zc(1:end-1);
-N2 = -(9.81/1025)*(drho./dzc);  % brunt vaisala frequency
+N2 = -(9.81/rho0)*(drho./dzc);  % brunt vaisala frequency
 N2 = [N2(1);N2;N2(end)];
 %N2(N2<1e-10) = 1e-10; % Mask negative and very small values**
 

@@ -4,7 +4,7 @@ clc; clear; close all;
 % area NX x NY, from a HYCOM tile. The eigenfunctions/values are then
 % saved in .mat format for later use. Currently 5 methods are used: 
 % 
-% Case 1: WKB (Early) 
+% Case 1: Spectral (Early) 
 % Case 2: FD2 (Early) 
 % Case 3: FD2 (Oladeji U) 
 % Case 4: FD2 (Oladeji W) 
@@ -26,8 +26,6 @@ figpath = '/data/msolano/matfiles';
 %% Read HYCOM variables
 hycom = read_hycom(); % !!!edit read_hycom.m to change tile!!! 
 [nx,ny,nz,nt] = size(hycom.rho); % tile size 
-%nx = 100; % over-ride x-size 
-%ny = 100; % over-ride y-size
 dzi = 25; % layer thickness for uniform grid [m]
 
 % Constants
@@ -90,13 +88,14 @@ for ii = 1:nx
 	    rhoint(:,i) = interp1(zc(:,i),rho(:,i),zc_mean,'linear','extrap'); 
         end
         %rho_mean = sort(mean(rhoint,2),'descend'); % mean sea-water density
-        rho_meant = mean(rhoint,2)+1000; % mean sea-water density
-	rhof_meant = interp1(zc_mean,rho_meant,zf_mean,'linear','extrap');
+        rho_mean = mean(rhoint,2)+1000; % mean sea-water density
+	rhof_mean = interp1(zc_mean,rho_mean,zf_mean,'linear','extrap');
 
 	% Mask rho
-        im = InternalModes(rhof_meant,zf_mean,zf_mean,hycom.lat(ii,j));
-	[N2,rho_mean] = N2mask(rho_meant,im.N2,diff(zc_mean));
-	rhof_mean = interp1(zc_mean,rho_mean,zf_mean,'linear','extrap');
+       % im = InternalModes(rhof_meant,zf_mean,zf_mean,hycom.lat(ii,j),...
+%	'method','finiteDifference');
+%	[N2,rho_mean] = N2mask(rho_meant,im.rho0,im.N2,diff(zc_mean));
+%	rhof_mean = interp1(zc_mean,rho_mean,zf_mean,'linear','extrap');
 
 	% Compute perturbation pressure
         pert = compute_pertpress(rho,zc,zf); % perturbation pressure
@@ -104,7 +103,9 @@ for ii = 1:nx
 %*****  Compute eigenfunctions 
 %% Case 1: WKB (Early) 
 % Input/output at faces for Weig. Ueig computed at centers. 
-        im = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(ii,j));
+        im = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(ii,j),...
+	                   'method','spectral');
+	rho0 = im.rho0; 
         [~,Weig1,~,k] = im.ModesAtFrequency(omega);
         Ueig1(ii,j,1:nz,:) = compute_ueig(Weig1(:,1:nmodes),dz);
 	k1(ii,j,:) = k(:,1:nmodes); clear k
@@ -120,13 +121,13 @@ for ii = 1:nx
         
 %% Case 3: FD (Oladeji W)
 % See compute_eigen for details
-        S3 = compute_eigen(rho_mean,zf_mean,f,omega);
+        S3 = compute_eigen(rho_mean,rho0,zf_mean,f,omega);
 	Ueig3(ii,j,1:nz,:) = S3.Ueig(:,1:nmodes); 
 	k3(ii,j,:) = S3.k(1:nmodes);
         	
 %% Case 4: FD (Oladeji U)
 % See compute_eigenU for details
-        S4 = compute_eigenU(rho_mean,zf_mean,f,omega);
+        S4 = compute_eigenU(rho_mean,rho0,zf_mean,f,omega);
 	Ueig4(ii,j,1:nz,:) = S4.Ueig(:,1:nmodes); 
 	k4(ii,j,:) = S4.k(1:nmodes);
 
@@ -150,7 +151,7 @@ lat = hycom.lat(1:nx,1:ny);
 depth = hycom.h(1:nx,1:ny); 
 
 %% Save output 
-save('eigentile_v2.mat','lon','lat','depth','Ueig1','Ueig2','Ueig3','Ueig4',...
+save('eigentile_v3.mat','lon','lat','depth','Ueig1','Ueig2','Ueig3','Ueig4',...
                      'Ueig5','k1','k2','k3','k4','k5')
-system(['mv eigentile_v2.mat ' figpath '/']);
+system(['mv eigentile_v3.mat ' figpath '/']);
 

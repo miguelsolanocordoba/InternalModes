@@ -10,6 +10,12 @@ clc; clear; close all;
 % plotfit => plots harmonic fit (pcolor and time-series)
 % plotsta => plots statistics
 % 
+% Case 1: Spectral (Early)
+% Case 2: FD2 (Early)
+% Case 3: FD2 (Oladeji U)
+% Case 4: FD2 (Oladeji W)
+% Case 5: Unifrm (dz=25m)
+%
 % Created: Miguel Solano, May 31, 2020.
 
 %% Defaults
@@ -26,14 +32,15 @@ addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/Distributions
 addpath /home/mbui/Temp/forMiguel/funcs/
 
 %% Input Options
-% Location (=1 North Atlantic, =2 South Pacific)
-loc = 3;  locstr = num2str(loc); 
+% Location (=1/3/4 North Atlantic, =2/5 South Pacific)
+loc = 2;  locstr = num2str(loc); 
 
 % plotting options (1=yes, 0=no)
-plotini = 1; % Stratification and filtering 
-ploteig = 1; % Eigenvalues (,Weig) 
-plotfit = 1; % Velocity and fit (pcolor and time series)
-plotsta = 1; % Statistics (R2 and S2)
+plotini = 0; % Stratification and filtering 
+ploteig = 1; % Eigenfunctions (Ueig) 
+plotfit = 0; % Velocity and fit (pcolor and time series)
+plot_ke = 0; % Kinetic Energy
+plotsta = 0; % Statistics (R2)
 fntsz = 6;   % legend font size 
 
 dirout = '/data/msolano/figures/modes_hycom/';
@@ -49,7 +56,7 @@ ufiltint = profile.ufiltint;
 vfiltint = profile.vfiltint; 
 
 %% Cases
-cname = {'WKB','FD (Early)','FD (Early U)','FD (Oladeji)','FD (Oladeji U)','Uniform'};
+cname = {'spectral','FD (Early)','FD (Early U)','FD (Oladeji)','FD (Oladeji U)','Uniform'};
 
 %% Initialize
 % Dimensions and constants
@@ -71,74 +78,49 @@ H = nansum(dz);        % total depth
 N = numel(dz);         % number of layers 
 
 % Density and latitude
-%rho_mean = sort(profile.rho_mean,'descend')+1000;  % Mean density 
 rho_mean = profile.rho_mean+1000;  % Mean sea-water density 
 lat = profile.latitude;  % Latitude 
 rhof_mean = interp1(zc,rho_mean,zf,'linear','extrap');
 
 % Initilized Early's InternalModes
-imWKB = InternalModes(rhof_mean,zf,zf,lat);
+imspectral = InternalModes(rhof_mean,zf,zf,lat,'method','spectral');
 imf = InternalModes(rhof_mean,zf,zf,lat,'method','finiteDifference');
 imU = InternalModes(rho_mean,zc,zc,lat,'method','finiteDifference');
 
 f = imU.f0; 
+rho0 = imU.rho0; 
 
-N2 = imU.N2; 
-N2(end)=N2(end-1);
-imU2 = InternalModes(N2,zc,zc,lat,'method','finiteDifference',...
-                     'N2',1,'rho0',imf.rho0);
+%N2 = imU.N2; 
+%N2(end-2)=N2(end-1);
+%N2(N2<0)=1e-10;
+[N2m,rho_meanm] = N2mask(rho_mean,imU.rho0,imU.N2,diff(zc)); 
+imU2 = InternalModes(rho_meanm,zc,zc,lat,'method','spectral',...
+                     'rho0',imU.rho0);
+%imU2 = InternalModes(N2,zc,zc,lat,'method','finiteDifference',...
+%                     'N2',1,'rho0',imU.rho0);
 
-imU.N2-imU2.N2
+imU.N2
+imU2.N2
 
 
-%% Mask N2 and re-compute rho_mean
-% Method 1 (N2 at faces, rho at centers)
-dzc = diff(zc); 
-[N2mod,rho_meanmod] = N2mask(rho_mean,imf.N2,dzc);
-rhof_meanmod = interp1(zc,rho_meanmod,zf,'linear','extrap');
-im = InternalModes(rhof_meanmod,zf,zf,lat);
-%
-%% Method 2 (N2 at centers, rho at faces) 
-%[N2mod2,rhof_meanmod2] = N2maskf(rhof_mean,imU.N2,dz);
-%rho_meanmod2 = interp1(zf,rhof_meanmod2,zc,'linear','extrap');
-%im2 = InternalModes(rhof_meanmod2,zf,zf,lat);
-%
-%  
 figure
 subplot(121)
-plot(rho_mean,zc,'k'); hold on 
-plot(rho_meanmod,zc,'b');
+plot(rhof_mean,zf,'k'); hold on 
+plot(imU.rho,imU.z,'b');
+plot(imU2.rho,imU2.z,'r');
 title('Density'); xlabel('\rho [kg/m^3]'); ylabel('Depth [m]')
-legend('Original','Modified')
+legend('Original','Early','Early mod')
 ylim([-H 0]);
 subplot(122)
-semilogx(imf.N2,zf,'k'); hold on
-semilogx(N2mod,zf,'b');
-semilogx(im.N2,zf,'r');
+semilogx(imU.N2,imU.z,'k'); hold on
+semilogx(imU2.N2,imU2.z,'b');
 title('Stratification'); xlabel('N^2'); ylabel('Depth [m]')
 ylim([-H 0]);
-legend('Original','Masked','Early','Location','SouthWest')
+legend('Original','Masked','Location','SouthWest')
 print('stratification1.png','-r300','-dpng')
-%
-%figure
-%subplot(121)
-%plot(rho_mean,zc,'k'); hold on
-%plot(rhof_meanmod2,zf,'b');
-%title('Density'); xlabel('\rho [kg/m^3]'); ylabel('Depth [m]')
-%legend('Original','Modified')
-%ylim([-H 0]);
-%subplot(122)
-%semilogx(imf.N2,zf,'k'); hold on
-%semilogx(N2mod2,zc,'b');
-%semilogx(im2.N2,zf,'r');
-%title('Stratification'); xlabel('N^2'); ylabel('Depth [m]')
-%ylim([-H 0]);
-%legend('Original','Masked','Early','Location','SouthWest')
-%print('stratification2.png','-r300','-dpng')
-%
-%system(['rm ' dirout '*.png']);
-%system(['mv *.png ' dirout]);
 
+system(['rm ' dirout '*.png']);
+system(['mv *.png ' dirout]);
 
 %% Compute eigenmodes
 % *All cases are interpolated to time-mean layer
@@ -146,7 +128,7 @@ print('stratification1.png','-r300','-dpng')
 
 %% Case 1: WKB solution (Early)
 % Eigenfunctions
-[~,Weig1,h1,k1] = imWKB.ModesAtFrequency(omega); % omega-const EVP 
+[~,Weig1,h1,k1] = imspectral.ModesAtFrequency(omega); % omega-const EVP 
 Ueig1 = compute_ueig(Weig1,dz);                  % Normalized Ueig
 
 % Eigenvalues
@@ -185,7 +167,7 @@ Cg3 = (omega^2-f^2)./(omega*k3);                 % group-speed
 
 %% Case 4: FD Weig (Oladeji) 
 % Eigenfunctions
-S = compute_eigen(rho_mean,zf,f,omega); 
+S = compute_eigen(rho_mean,rho0,zf,f,omega); 
 Ueig4 = S.Ueig;
 
 % Eigenvalues
@@ -197,7 +179,7 @@ Ce4 = sqrt(omega^2-f^2)./(k4.^2);                % eigen-speed
 
 %% Case 5: FD  (Oladeji) 
 % Eigenfunctions
-S = compute_eigenU(rho_mean,zf,f,omega); 
+S = compute_eigenU(rho_mean,rho0,zf,f,omega); 
 Ueig5 = S.Ueig;
 
 % Eigenvalues
@@ -244,10 +226,6 @@ fprintf('\nMode 1 phase-speed (C)')
 fprintf('\nOladeji = %4.4f[m/s]',C4(1))
 fprintf('\nJeffrey = %4.4f[m/s]',C3(1))
 fprintf('\nMaarten = %4.4f[m/s]\n',C6(1))
-
-fprintf('\nMode 1 eigen-speed (C)')
-fprintf('\nOladeji = %4.4f[m/s]',Ce4(1))
-fprintf('\nJeffrey = %4.4f[m/s]\n',Ce2(1))
 
 
 %% Mode fitting and statistics
@@ -457,7 +435,7 @@ title('Mode 5'); xlabel('U_{eig}');% ylabel('Depth [m]');
 axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
 yticklabels([])
 
-print('.png','-r300','-dpng')
+print('Ueig.png','-r300','-dpng')
 
 end % if ploteig
 
@@ -658,6 +636,55 @@ legend('v_{iso}',cname{1},cname{2},cname{4},cname{5},'Location','EastOutside')
 print('uv_sur.png','-r300','-dpng') 
 
 end % if plotfit
+
+
+%% Kinetic Energy
+if plot_ke
+[x,y] = meshgrid(t,zc); 
+[x1,y1] = meshgrid(t,zcM); 
+cmin = 0; cmax = 3;
+
+figure; colormap('jet')
+subplot(511)
+pcolor(x,y,H*(ufilt.^2+vfilt.^2)); shading flat; colorbar; caxis([cmin cmax])
+title('Kinetic Energy of band-passed velocity');
+datetick('x','dd'); xlim([t(1) t(end)]);
+ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
+set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
+
+subplot(512)
+pcolor(x,y,H*(ufit1.^2+vfit1.^2)); shading flat; colorbar; caxis([cmin cmax])
+title([cname{1}])
+datetick('x','dd'); xlim([t(1) t(end)])
+ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
+set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
+
+subplot(513)
+pcolor(x,y,H*(ufit2.^2+vfit2.^2)); shading flat; colorbar; caxis([cmin cmax])
+title([cname{2}])
+datetick('x','dd'); xlim([t(1) t(end)])
+ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
+set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
+
+subplot(514)
+pcolor(x,y,H*(ufit4.^2+vfit4.^2)); shading flat; colorbar; caxis([cmin cmax])
+title([cname{4}])
+datetick('x','dd'); xlim([t(1) t(end)])
+ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
+set(gca,'xticklabel',[],'TickLength',[0.01 0.01]);
+
+subplot(515)
+pcolor(x1,y1,H*(ufit6.^2+vfit6.^2)); shading flat; colorbar; caxis([cmin cmax])
+title([cname{6}])
+datetick('x','dd'); xlim([t(1) t(end)]);
+xlabel('Days since Sept. 1, 2016','FontSize',8)
+ylabel('Depth [m]'); ylim([ymin 0]); set(gca,'FontSize',fntsz);
+set(gca,'TickLength',[0.01 0.01],'TickDir','both');
+
+print('KE.png','-r300','-dpng')
+
+end
+
 
 
 %% plotsta: coefficient of determination R^2 and S^2
