@@ -88,17 +88,17 @@ for ii = 1:nx
 	    rhoint(:,i) = interp1(zc(:,i),rho(:,i),zc_mean,'linear','extrap'); 
         end
         %rho_mean = sort(mean(rhoint,2),'descend'); % mean sea-water density
-        rho_mean = mean(rhoint,2)+1000; % mean sea-water density
-	rhof_mean = interp1(zc_mean,rho_mean,zf_mean,'linear','extrap');
+        rho_meant = mean(rhoint,2)+1000; % mean sea-water density
+	rhof_meant = interp1(zc_mean,rho_meant,zf_mean,'linear','extrap');
 
 	% Mask rho
-       % im = InternalModes(rhof_meant,zf_mean,zf_mean,hycom.lat(ii,j),...
-%	'method','finiteDifference');
-%	[N2,rho_mean] = N2mask(rho_meant,im.rho0,im.N2,diff(zc_mean));
-%	rhof_mean = interp1(zc_mean,rho_mean,zf_mean,'linear','extrap');
+        im = InternalModes(rhof_meant,zf_mean,zf_mean,hycom.lat(ii,j),...
+	'method','finiteDifference');
+	[N2,rho_mean] = N2mask(rho_meant,im.rho0,im.N2,diff(zc_mean));
+	rhof_mean = interp1(zc_mean,rho_mean,zf_mean,'linear','extrap');
 
 	% Compute perturbation pressure
-        pert = compute_pertpress(rho,zc,zf); % perturbation pressure
+        pert = compute_pertpress(rhoint,zc,zf); % perturbation pressure
 
 %*****  Compute eigenfunctions 
 %% Case 1: WKB (Early) 
@@ -143,6 +143,7 @@ for ii = 1:nx
 
         Ueig5(ii,j,1:nzM,:) = Ueig6t(:,2:nmodes+1);
 	k5(ii,j,:) = 2*pi./(L5(1:nmodes));
+
     end
 end
 
@@ -151,7 +152,7 @@ lat = hycom.lat(1:nx,1:ny);
 depth = hycom.h(1:nx,1:ny); 
 
 %% Save output 
-save('eigentile_v3.mat','lon','lat','depth','Ueig1','Ueig2','Ueig3','Ueig4',...
+save('eigentile_v4.mat','lon','lat','depth','Ueig1','Ueig2','Ueig3','Ueig4',...
                      'Ueig5','k1','k2','k3','k4','k5')
-system(['mv eigentile_v3.mat ' figpath '/']);
+system(['mv eigentile_v4.mat ' figpath '/']);
 

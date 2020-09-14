@@ -33,14 +33,14 @@ addpath /home/mbui/Temp/forMiguel/funcs/
 
 %% Input Options
 % Location (=1/3/4 North Atlantic, =2/5 South Pacific)
-loc = 2;  locstr = num2str(loc); 
+loc = 3;  locstr = num2str(loc); 
 
 % plotting options (1=yes, 0=no)
 plotini = 0; % Stratification and filtering 
-ploteig = 1; % Eigenfunctions (Ueig) 
+ploteig = 0; % Eigenfunctions (Ueig) 
 plotfit = 0; % Velocity and fit (pcolor and time series)
 plot_ke = 0; % Kinetic Energy
-plotsta = 0; % Statistics (R2)
+plotsta = 1; % Statistics (R2)
 fntsz = 6;   % legend font size 
 
 dirout = '/data/msolano/figures/modes_hycom/';
@@ -56,7 +56,7 @@ ufiltint = profile.ufiltint;
 vfiltint = profile.vfiltint; 
 
 %% Cases
-cname = {'spectral','FD (Early)','FD (Early U)','FD (Oladeji)','FD (Oladeji U)','Uniform'};
+cname = {'Spectral','FD (Early)','FD (Early U)','FD (Oladeji)','FD (Oladeji U)','Uniform'};
 
 %% Initialize
 % Dimensions and constants
@@ -126,7 +126,7 @@ system(['mv *.png ' dirout]);
 % *All cases are interpolated to time-mean layer
 % *All cases (except 6) are on native grid (HYCOM)
 
-%% Case 1: WKB solution (Early)
+%% Case 1: SPECTRAL
 % Eigenfunctions
 [~,Weig1,h1,k1] = imspectral.ModesAtFrequency(omega); % omega-const EVP 
 Ueig1 = compute_ueig(Weig1,dz);                  % Normalized Ueig
@@ -136,7 +136,7 @@ L1 = 2*pi./k1;                                   % wave-length
 C1 = omega./k1;                                  % phase-speed
 Cg1 = (omega^2-f^2)./(omega*k1);                 % group-speed 
 
-%% Case 2: FD Weig (Early) 
+%% Case 2: FD (Early) 
 % Eigenfunctions
 [~,Weig2,h2,k2] = imf.ModesAtFrequency(omega);   % omega-const EVP
 Ueig2 = compute_ueig(Weig2,dz);                  % Normalized Ueig
@@ -148,7 +148,7 @@ Cg2 = (omega^2-f^2)./(omega*k2);                 % group-speed
 %Ce2 = sqrt(omega^2-f^2)./(k2.^2);                % eigen-speed
 Ce2 = sqrt(g*h2);
 
-%% Case 3: FD  (Early) 
+%% Case 3: FD (Early) 
 % Eigenfunctions
 imU.normalization = 'wMax';
 [Ueigt,~,h3,k3] = imU.ModesAtFrequency(omega);   % omega-const EVP
