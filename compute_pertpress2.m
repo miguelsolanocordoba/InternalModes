@@ -20,14 +20,16 @@ rhoint = zeros(size(rho));
 rhof = zeros(nz+1,nt); 
 for i=1:nt
     rhoint(:,i) = interp1(zc(:,i),rho(:,i),zcmean);
-    rhof(:,i) = interp1(zc(:,i),rho(:,i),zf(:,i),'linear','extrap'); 
+%    rhof(:,i) = interp1(zc(:,i),rho(:,i),zf(:,i),'linear','extrap'); 
+    rhof(:,i) = interp1(zc(:,i),rho(:,i),zfmean,'linear','extrap'); 
 end
 rho_mean = mean(rho,2); 
+%rho_mean = mean(rhoint,2); 
 rhof_mean = mean(rhof,2); 
 
 % Interpolate mean density to faces and compute N2
 %rhof_mean = interp1(zcmean,rho_mean,zfmean,'nearest','extrap'); 
-N2 = compute_bvf(rhof_mean,1025,zfmean); 
+N2 = compute_bvf(rhof_mean,1035.4312,zfmean); 
 
 % Pre-allocate 
 rhodiff = zeros(nz,nt); 
@@ -36,7 +38,7 @@ prho = zeros(nz,nt);
 % Compute density anomaly 
 for i=1:nt
     eta = zc(:,i) - zcmean;
-    rhodiff(:,i) = (rho_mean/g).*N2.*eta; 
+    rhodiff(:,i) = (rho_mean/g).*N2.*eta + rho(:,i) - rho_mean; 
     prho(:,i) = g*rhodiff(:,i).*dz; 
 end
 
