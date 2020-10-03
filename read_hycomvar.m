@@ -1,6 +1,6 @@
-function hycom = read_hycom()
-%%READ_HYCOM reads in HYCOM's output (.BinF)
-% HYCOM = READ_HYCOM reads HYCOM binaries (.BinF) and saves output 
+function hycom = read_hycom(var)
+%%READ_HYCOMVAR reads in a variable from HYCOM's output (.BinF)
+% HYCOM = READ_HYCOMVAR reads HYCOM binaries (.BinF) and saves output 
 % into a Matlab structure:
 %
 % hycom.time  % time (in datenum format)
@@ -8,11 +8,18 @@ function hycom = read_hycom()
 % hycom.lat   % latitude 
 % hycom.h     % depth 
 % hycom.dz    % layer thickness
+%
+% VARIABLES
 % hycom.uiso  % baroclinic velocity (u) 
 % hycom.viso  % baroclinic velocity (v) 
 % hycom.rho   % density  
+% hycom.temp  % temperature 
+% hycom.salt  % salinity
+% hycom.ubar  % eastward barotropic velocity
+% hycom.vbar  % northward barotropic velocity
+% hycom.ssh   % sea surface height 
 % 
-% Created: July 10, 2020 by M. Solano 
+% Created: October 3, 2020 by M. Solano 
 
 % Format 
 IEEE = 'ieee-be';
@@ -43,20 +50,44 @@ lonfile = [dirin 'griddata/plon_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
 latfile = [dirin 'griddata/plat_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
+fnamedz = [dirin 'thknss/thknss_' num2str(runnum) '_blk_' ...
+           num2str(blki) '_' num2str(blkj) '.BinF'];
 
 % Variables 
-fname1 = [dirin 'u_iso/u_' num2str(runnum) '_blk_' ...
+switch var
+   case 'uiso'
+fname = [dirin 'u_iso/u_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
-fname2 = [dirin 'v_iso/v_' num2str(runnum) '_blk_' ...
+      vardim = 3; 
+   case 'viso'
+fname = [dirin 'v_iso/v_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
-fname3 = [dirin 'thknss/thknss_' num2str(runnum) '_blk_' ...
+      vardim = 3; 
+   case 'rho'
+fname = [dirin 'sig/sig_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
-fname4 = [dirin 'sig/sig_' num2str(runnum) '_blk_' ...
+      vardim = 3; 
+   case 'temp'
+fname = [dirin 'temp/T_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
-fname5 = [dirin 'temp/T_' num2str(runnum) '_blk_' ...
+      vardim = 3; 
+   case 'salt'
+fname = [dirin 'sal/S_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
-fname6 = [dirin 'sal/S_' num2str(runnum) '_blk_' ...
+      vardim = 3; 
+   case 'ssh'
+fname = [dirin 'srfhgt/srfhgt_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
+      vardim = 2; 
+   case 'steric'
+fname = [dirin 'steric/steric_' num2str(runnum) '_blk_' ...
+           num2str(blki) '_' num2str(blkj) '.BinF'];
+      vardim = 2; 
+   otherwise 
+      disp('VAR must be: uiso, viso, rho, temp, salt, ssh, steric')
+      return
+end
+
 
 % Dimensions
 nbf = 3;  % halo/padding 
@@ -90,54 +121,41 @@ fclose(fidlat);
 
 %% Read variables
 % Open files
-fid1 = fopen(fname1,'r',IEEE);
-fid2 = fopen(fname2,'r',IEEE);
-fid3 = fopen(fname3,'r',IEEE);
-fid4 = fopen(fname4,'r',IEEE);
-fid5 = fopen(fname5,'r',IEEE);
-fid6 = fopen(fname6,'r',IEEE);
+fiddz = fopen(fnamedz,'r',IEEE);
+fid = fopen(fname,'r',IEEE);
 
-fname5
-
-%% Read variables: u_iso, v_iso, sig, thknss
-uiso = [];
-viso = [];
+%% Read selected variable
+vars = [];
 thknss = [];
-sig = [];
-sal = [];
-temp = [];
 
 % extract layer thickness, u,v in space and time
 fprintf('\nReading HYCOM output: \n') 
 for i=1:nt
-    
     fprintf('%d/%d\n',i,nt)	
-    
     for k=1:nz
-        alldata1 = fread(fid1,lenrec2,'single');
-        alldata2 = fread(fid2,lenrec2,'single');
-        alldata3 = fread(fid3,lenrec2,'single');
-        alldata4 = fread(fid4,lenrec2,'single');
-        alldata5 = fread(fid5,lenrec2,'single');
-        alldata6 = fread(fid6,lenrec2,'single');
-        
-        uiso(:,:,k,i)   = permute(reshape(alldata1(2:end-1),[nxb nyb]),[2 1]);
-        viso(:,:,k,i)   = permute(reshape(alldata2(2:end-1),[nxb nyb]),[2 1]);
-        thknss(:,:,k,i) = permute(reshape(alldata3(2:end-1),[nxb nyb]),[2 1]);
-        sig(:,:,k,i)    = permute(reshape(alldata4(2:end-1),[nxb nyb]),[2 1]);
-        temp(:,:,k,i)    = permute(reshape(alldata5(2:end-1),[nxb nyb]),[2 1]);
-        sal(:,:,k,i)    = permute(reshape(alldata6(2:end-1),[nxb nyb]),[2 1]);
-        
+        alldatadz = fread(fiddz,lenrec2,'single');
+        thknss(:,:,k,i) = permute(reshape(alldatadz(2:end-1),[nxb nyb]),[2 1]);
     end
 end
-    
+   
+if vardim==3
+   for i=1:nt
+       for k=1:nz
+           alldata = fread(fid,lenrec2,'single');
+           vars(:,:,k,i)   = permute(reshape(alldata(2:end-1),[nxb nyb]),[2 1]);
+       end
+   end
+elseif vardim==2
+   for i=1:nt
+       alldata = fread(fid,lenrec2,'single');
+       vars(:,:,i)   = permute(reshape(alldata(2:end-1),[nxb nyb]),[2 1]);
+   end
+end
+
+
 fprintf('\nDone reading variables!\n')
-fclose(fid1);
-fclose(fid2);
-fclose(fid3);
-fclose(fid4);
-fclose(fid5);
-fclose(fid6);
+fclose(fid);
+fclose(fiddz);
 
 % Don't save halos (nbf) 
 b = [nbf+1:nx+nbf]; 
@@ -149,10 +167,11 @@ hycom.lon = lon(a,b);         % longitude
 hycom.lat = lat(a,b);         % latitude 
 hycom.h   = depth(a,b);       % depth 
 hycom.dz  = thknss(a,b,:,:);  % layer thickness
-hycom.uiso = uiso(a,b,:,:);   % baroclinic velocity (u) 
-hycom.viso = viso(a,b,:,:);   % baroclinic velocity (v) 
-hycom.rho = sig(a,b,:,:);     % density  
-hycom.salt = sal(a,b,:,:);    % salinity 
-hycom.temp = temp(a,b,:,:);   % temperature 
+switch vardim
+   case 2  % 2D variable
+      hycom.vars = vars(a,b,:);    
+   case 3  % 3D variable
+      hycom.vars = vars(a,b,:,:);  
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% EoF %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

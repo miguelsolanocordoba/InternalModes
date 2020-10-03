@@ -37,9 +37,9 @@ loc = 3;  locstr = num2str(loc);
 
 % plotting options (1=yes, 0=no)
 plotini = 0; % Stratification and filtering 
-ploteig = 0; % Eigenfunctions (Ueig) 
+ploteig = 1; % Eigenfunctions (Ueig) 
 plotfit = 0; % Velocity and fit (pcolor and time series)
-plot_ke = 0; % Kinetic Energy
+plot_ke = 1; % Kinetic Energy
 plotsta = 1; % Statistics (R2)
 fntsz = 6;   % legend font size 
 
@@ -56,7 +56,7 @@ ufiltint = profile.ufiltint;
 vfiltint = profile.vfiltint; 
 
 %% Cases
-cname = {'Spectral','FD (Early)','FD (Early U)','FD (Oladeji)','FD (Oladeji U)','Uniform'};
+cname = {'Spectral','FD (Early)','FD (Early FS)','FD (Oladeji)','FD (Oladeji U)','Uniform'};
 
 %% Initialize
 % Dimensions and constants
@@ -150,20 +150,17 @@ Ce2 = sqrt(g*h2);
 
 %% Case 3: FD (Early) 
 % Eigenfunctions
-imU.normalization = 'wMax';
-[Ueigt,~,h3,k3] = imU.ModesAtFrequency(omega);   % omega-const EVP
-
-dzu = repmat(dz,[1,size(dz,1)]);
-AA = repmat(sum(Ueigt.^2.*dzu,1)./H,[N 1]).^(1/2);
-AA(AA==0) = Inf;
-Ueig = Ueigt./AA;
-Ueig(:,Ueig(N,:)<0) = -Ueig(:,Ueig(N,:)<0);
-Ueig3 = Ueig;
+imf.upperBoundary = 'freeSurface';
+[~,Weig3,h3,k3] = imf.ModesAtFrequency(omega);   % omega-const EVP
+Ueig3 = compute_ueig(Weig3,dz);                  % Normalized Ueig
 
 % Eigenvalues
 L3 = 2*pi./k3;                                   % wave-length 
 C3 = omega./k3;                                  % phase-speed
 Cg3 = (omega^2-f^2)./(omega*k3);                 % group-speed 
+%Ce3 = sqrt(omega^2-f^2)./(k3.^2);                % eigen-speed
+Ce3 = sqrt(g*h3);
+
 
 %% Case 4: FD Weig (Oladeji) 
 % Eigenfunctions
@@ -241,8 +238,8 @@ nmodes = 5;
 [r2v2,v2] = compute_modfit(vfiltint,dz,Ueig2,nmodes); 
 
 % CASE 3
-[r2u3,u3] = compute_modfit(ufiltint,dz,Ueig3,nmodes); 
-[r2v3,v3] = compute_modfit(vfiltint,dz,Ueig3,nmodes); 
+[r2u3,u3] = compute_modfit(ufiltint,dz,Ueig3(:,2:end),nmodes); 
+[r2v3,v3] = compute_modfit(vfiltint,dz,Ueig3(:,2:end),nmodes); 
 
 % CASE 4
 [r2u4,u4] = compute_modfit(ufiltint,dz,Ueig4,nmodes); 
@@ -381,7 +378,7 @@ ylim([ymin 0]); yticklabels([])
 subplot(162)
 plot(Ueig1(:,1),zc,'k','LineWidth',2.5); hold on
 plot(Ueig2(:,1),zc,'b'); hold on
-plot(Ueig3(:,1),zc,'r');
+%plot(Ueig3(:,2),zc,'r');
 plot(Ueig4(:,1),zc,'--r');
 plot(Ueig6(:,1),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
@@ -394,7 +391,7 @@ legend(cname{1},cname{2},cname{4},cname{6},'Box','on',...
 subplot(163)
 plot(Ueig1(:,2),zc,'k','LineWidth',2.5); hold on
 plot(Ueig2(:,2),zc,'b'); 
-plot(Ueig3(:,2),zc,'r');
+%plot(Ueig3(:,3),zc,'r');
 plot(Ueig4(:,2),zc,'--r');
 plot(Ueig6(:,2),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
@@ -405,7 +402,7 @@ yticklabels([])
 subplot(164)
 plot(Ueig1(:,3),zc,'k','LineWidth',2.5); hold on
 plot(Ueig2(:,3),zc,'b');
-plot(Ueig3(:,3),zc,'r');
+%plot(Ueig3(:,4),zc,'r');
 plot(Ueig4(:,3),zc,'--r');
 plot(Ueig6(:,3),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
@@ -416,7 +413,7 @@ yticklabels([])
 subplot(165)
 plot(Ueig1(:,4),zc,'k','LineWidth',2.5); hold on
 plot(Ueig2(:,4),zc,'b');
-plot(Ueig3(:,4),zc,'r');
+%plot(Ueig3(:,5),zc,'r');
 plot(Ueig4(:,4),zc,'--r');
 plot(Ueig6(:,4),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
@@ -427,7 +424,7 @@ yticklabels([])
 subplot(166)
 plot(Ueig1(:,5),zc,'k','LineWidth',2.5); hold on
 plot(Ueig2(:,5),zc,'b'); 
-plot(Ueig3(:,5),zc,'r');
+%plot(Ueig3(:,6),zc,'r');
 plot(Ueig4(:,5),zc,'--r');
 plot(Ueig6(:,5),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
@@ -690,32 +687,21 @@ end
 %% plotsta: coefficient of determination R^2 and S^2
 if plotsta
 
-%figure
-%plot(t,SS_tot(:,5),'k','LineWidth',2); hold on 
-%plot(t,SS_res1(:,5),'b')
-%plot(t,SS_res2(:,5),'r')
-%plot(t,SS_res4(:,5),'g')
-%plot(t,SS_res6(:,5),'m')
-%datetick('x','dd'); ylabel('SS'); pbaspect([5 1 1])
-%legend('SS_{total}',cname{1},cname{2},cname{4},cname{6})
-%print('SS.png','-r300','-dpng') 
-
-
 figure
 subplot(121)
-bar([r2u1 r2u2 r2u4 r2u6])
+bar([r2u1 r2u2 r2u3 r2u4 r2u6])
 title(['R^2 (u) at location ' locstr]); 
 xlabel('Modes'); ylabel('R^2'); pbaspect([1.5 1 1]) 
 set(gca,'FontSize',fntsz); xticklabels({'1','1-2','1-3','1-4','1-5'});
-legend(cname{1},cname{2},cname{4},cname{5},cname{6},...
+legend(cname{1},cname{2},cname{3},cname{4},cname{6},...
        'Position',[0.17 0.59 0.06 0.05],'FontSize',5,'Box','off')
 
 subplot(122)
-bar([r2v1 r2v2 r2v4 r2v6])
+bar([r2v1 r2v2 r2v3 r2v4 r2v6])
 title(['R^2 (v) at location ' locstr]); 
 xlabel('Modes'); ylabel('R^2'); pbaspect([1.5 1 1]) 
 set(gca,'FontSize',fntsz); xticklabels({'1','1-2','1-3','1-4','1-5'});
-legend(cname{1},cname{2},cname{4},cname{6},...
+legend(cname{1},cname{2},cname{3},cname{4},cname{6},...
        'Position',[0.6 0.59 0.06 0.05],'FontSize',5,'Box','off')
 print('r2.png','-r300','-dpng') 
 
