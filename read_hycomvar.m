@@ -1,4 +1,4 @@
-function hycom = read_hycom(var)
+function hycom = read_hycom(runum,blki,blkj,var)
 %%READ_HYCOMVAR reads in a variable from HYCOM's output (.BinF)
 % HYCOM = READ_HYCOMVAR reads HYCOM binaries (.BinF) and saves output 
 % into a Matlab structure:
@@ -26,18 +26,21 @@ IEEE = 'ieee-be';
 addpath /data/msolano/Matlab
 
 %% Experiment and tile number 
-% loc1 > runnum=221;  blki=27; blkj=45; (North Atlantic)
-% loc2 > runnum=190;  blki=15; blkj=25; (South Pacific) 
+% North Atlantic > runnum=221;  blki=27; blkj=45;
+% South Pacific > runnum=190;  blki=15; blkj=25;
+% Amazon (1) > runnum=190;  blki=19; blkj=40;
+% Amazon (2) > runnum=190;  blki=19; blkj=41;
+% Amazon (3) > runnum=190;  blki=18; blkj=40;
+% Amazon (4) > runnum=190;  blki=18; blkj=41;
 
-runnum = 221;
+%runnum = 190; 
+dirin = '/data2/msolano/hycom/GLBc0.04/expt_19.0/'; % EXPT_19.0
+%runnum =221; dirin = '/data2/mbui/for_keshav/tiles/';             % EXPT_22.1
 runnumstr = num2str(runnum);
-blki=27;
-blkj=45;
+%blki=19;
+%blkj=40;
 
-% Directories
-dirin = '/data2/mbui/for_keshav/tiles/'; % loc1
-%dirin = '/data2/msolano/forEmanuel/hycom/GLBc0.04/expt_19.0/'; 
-
+% Print some info
 fprintf('\nReading HYCOM files (read_hycom)\n')
 fprintf('Input directory: %s\n',dirin)
 fprintf('iTile = %d\n',blki)

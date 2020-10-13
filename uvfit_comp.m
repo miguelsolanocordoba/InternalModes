@@ -33,12 +33,12 @@ addpath /home/mbui/Temp/forMiguel/funcs/
 
 %% Input Options
 % Location (=1/3/4 North Atlantic, =2/5 South Pacific)
-loc = 3;  locstr = num2str(loc); 
+loc = 6;  locstr = num2str(loc); 
 
 % plotting options (1=yes, 0=no)
 plotini = 0; % Stratification and filtering 
 ploteig = 1; % Eigenfunctions (Ueig) 
-plotfit = 0; % Velocity and fit (pcolor and time series)
+plotfit = 1; % Velocity and fit (pcolor and time series)
 plot_ke = 1; % Kinetic Energy
 plotsta = 1; % Statistics (R2)
 fntsz = 6;   % legend font size 
@@ -98,9 +98,6 @@ imU2 = InternalModes(rho_meanm,zc,zc,lat,'method','spectral',...
                      'rho0',imU.rho0);
 %imU2 = InternalModes(N2,zc,zc,lat,'method','finiteDifference',...
 %                     'N2',1,'rho0',imU.rho0);
-
-imU.N2
-imU2.N2
 
 
 figure

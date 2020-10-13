@@ -158,6 +158,6 @@ lat = hycom.lat(1:nx,1:ny);
 depth = hycom.h(1:nx,1:ny); 
 
 %% Save output 
-save([figpath '/eigentile_SP_v1.mat'],'lon','lat','depth','Ueig1','Ueig2','Ueig3','Ueig4',...
-                     'Ueig5','k1','k2','k3','k4','k5')
+save([figpath '/eigentile_AMZN1940.mat'],'lon','lat','depth','Ueig1','Ueig2',...
+     'Ueig3','Ueig4','Ueig5','k1','k2','k3','k4','k5')
 
