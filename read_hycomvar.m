@@ -1,4 +1,4 @@
-function hycom = read_hycom(runum,blki,blkj,var)
+function hycom = read_hycom(runnum,blki,blkj,var)
 %%READ_HYCOMVAR reads in a variable from HYCOM's output (.BinF)
 % HYCOM = READ_HYCOMVAR reads HYCOM binaries (.BinF) and saves output 
 % into a Matlab structure:
@@ -86,8 +86,12 @@ fname = [dirin 'srfhgt/srfhgt_' num2str(runnum) '_blk_' ...
 fname = [dirin 'steric/steric_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
       vardim = 2; 
+   case 'srfhgt'
+fname = [dirin 'srfhgt/srfhgt_' num2str(runnum) '_blk_' ...
+           num2str(blki) '_' num2str(blkj) '.BinF'];
+      vardim = 2; 
    otherwise 
-      disp('VAR must be: uiso, viso, rho, temp, salt, ssh, steric')
+      disp('VAR must be: uiso, viso, rho, temp, salt, ssh, steric, srfhgt')
       return
 end
 
