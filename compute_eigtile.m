@@ -16,36 +16,50 @@ clc; clear; close all;
 set(0,'defaultAxesFontSize',6)
 warning('off'); 
 
-addpath /data/msolano/Matlab/ocean_physics
 addpath /data/msolano/toolbox/GLOceanKit/Matlab/InternalModes
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/BSpline
 addpath /data/msolano/toolbox/GLNumericalModelingKit/Matlab/Distributions
 addpath /home/mbui/Temp/forMiguel/funcs/
 figpath = '/data/msolano/matfiles';
 
-%% Read HYCOM variables
-hycom = read_hycom(); % !!!edit read_hycom.m to change tile!!! 
+%% *** INPUT *** %% 
+exptn = 190; % Experiment number
+xtile = 18;  % blki 
+ytile = 40;  % blk j
+dzi = 25;    % layer thickness for uniform grid [m] ***
+nmodes = 10; % number of modes saved 
+
+% Convert to character strings
+xtilestr = num2str(xtile); 
+ytilestr = num2str(ytile); 
+exptnstr = num2str(exptn);  
+
+% Read hycom variables
+hycom = read_hycom(exptn,xtile,ytile); % !!!edit read_hycom.m to change tile!!! 
 [nx,ny,nz,nt] = size(hycom.rho); % tile size 
-dzi = 25; % layer thickness for uniform grid [m]
+nfiles = nx*ny; 
 
 % Constants
 g = 9.806;                      % gravity 
 omega = 12.1408331767/24/3600;  % M2 frequency
-nfiles = nx*ny; 
-nmodes = 5; 
 
 % Pre-allocation
-Ueig1 = zeros(nx,ny,41,nmodes); 
-Ueig2 = zeros(nx,ny,41,nmodes); 
-Ueig3 = zeros(nx,ny,41,nmodes); 
-Ueig4 = zeros(nx,ny,41,nmodes); 
-Ueig5 = zeros(nx,ny,200,nmodes); 
+%Ueig1 = zeros(nx,ny,41,nmodes); 
+%Ueig2 = zeros(nx,ny,41,nmodes); 
+%Ueig3 = zeros(nx,ny,41,nmodes); 
+%Ueig4 = zeros(nx,ny,41,nmodes); 
+Ueig = zeros(nx,ny,265,nmodes); 
+Weig = zeros(nx,ny,265,nmodes); 
 
-k1 = zeros(nx,ny,nmodes); 
-k2 = zeros(nx,ny,nmodes); 
-k3 = zeros(nx,ny,nmodes); 
-k4 = zeros(nx,ny,nmodes); 
-k5 = zeros(nx,ny,nmodes); 
+% To calculate the number of layers for the uniform case:
+% nzM*dzi > max(depth)
+% nzM > max(depth)/dzi ~ 265 for amazon (dzi=25m; max(h)=6400m)
+
+%k1 = zeros(nx,ny,nmodes); 
+%k2 = zeros(nx,ny,nmodes); 
+%k3 = zeros(nx,ny,nmodes); 
+%k4 = zeros(nx,ny,nmodes); 
+k = zeros(nx,ny,nmodes); 
 
 
 fprintf('\nComputing eigenvalues...\n')
@@ -55,15 +69,18 @@ for ii = 1:nx
     counti = counti + 1; 
     countj = 0; 
     for j = 1:ny
-
-	if hycom.h(ii,j)>1e4 
-	   continue  % ignore masked points
-	end
-
+        % Counters
 	countj = countj + 1; 
 	count = count + 1; 
 	fprintf('%d/%d\n',count,nfiles)
-	   
+
+	% Skip if on land
+	if hycom.h(ii,j)>1e4 
+	   continue  % ignore masked points
+        elseif hycom.h(ii,j)<dzi
+	   continue  % ignore very shallow zones (<dzi)
+	end
+
         f = coriolis(hycom.lat(ii,j)); % Coriolis frequency
     
         % Compute grid points from layer thickness
@@ -99,56 +116,57 @@ for ii = 1:nx
 	% Mask rho
         im = InternalModes(rhof_meant,zf_mean,zf_mean,hycom.lat(ii,j),...
 	'method','finiteDifference');
+	rho0 = im.rho0;
 	[N2,rho_mean] = N2mask(rho_meant,im.rho0,im.N2,diff(zc_mean));
-	rhof_mean = interp1(zc_mean,rho_mean,zf_mean,'linear','extrap');
+%	rhof_mean = interp1(zc_mean,rho_mean,zf_mean,'linear','extrap');
 
 	% Compute perturbation pressure
-        pert = compute_pertpress(rhoint,zc,zf); % perturbation pressure
+%        pert = compute_pertpress(rhoint,zc,zf); % perturbation pressure
 
 %*****  Compute eigenfunctions 
 %% Case 1: Spectral (Early) 
 % Input/output at faces for Weig. Ueig computed at centers. 
-        im = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(ii,j),...
-	                   'method','spectral');
-	rho0 = im.rho0; 
-        [~,Weig1,~,k] = im.ModesAtFrequency(omega);
-        Ueig1(ii,j,1:nz,:) = compute_ueig(Weig1(:,1:nmodes),dz);
-	k1(ii,j,:) = k(:,1:nmodes); clear k
-
-%% Case 2: FD (Early) 
-% Input/output at faces for Weig. Ueig computed at centers. 
-        imFD = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(ii,j),...
-	                     'method','finiteDifference',...
-			     'orderOfAccuracy',2);
-	[~,Weig2,~,k] = imFD.ModesAtFrequency(omega); 
-        Ueig2(ii,j,1:nz,:) = compute_ueig(Weig2(:,1:nmodes),dz); 
-	k2(ii,j,:) = k(:,1:nmodes); clear k
-        
-%% Case 3: FD (Oladeji W)
-% See compute_eigen for details
-        S3 = compute_eigen(rho_mean,rho0,zf_mean,f,omega);
-	Ueig3(ii,j,1:nz,:) = S3.Ueig(:,1:nmodes); 
-	k3(ii,j,:) = S3.k(1:nmodes);
-        	
-%% Case 4: FD (Oladeji U)
-% See compute_eigenU for details
+%        im = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(ii,j),...
+%	                   'method','spectral');
+%	rho0 = im.rho0; 
+%        [~,Weig1,~,k] = im.ModesAtFrequency(omega);
+%        Ueig1(ii,j,1:nz,:) = compute_ueig(Weig1(:,1:nmodes),dz);
+%	k1(ii,j,:) = k(:,1:nmodes); clear k
+%
+%%% Case 2: FD (Early) 
+%% Input/output at faces for Weig. Ueig computed at centers. 
+%        imFD = InternalModes(rhof_mean,zf_mean,zf_mean,hycom.lat(ii,j),...
+%	                     'method','finiteDifference',...
+%			     'orderOfAccuracy',2);
+%	[~,Weig2,~,k] = imFD.ModesAtFrequency(omega); 
+%        Ueig2(ii,j,1:nz,:) = compute_ueig(Weig2(:,1:nmodes),dz); 
+%	k2(ii,j,:) = k(:,1:nmodes); clear k
+%        %%% Case 3: FD (Oladeji W)
+%% See compute_eigen for details
+%        S3 = compute_eigen(rho_mean,rho0,zf_mean,f,omega);
+%	Ueig3(ii,j,1:nz,:) = S3.Ueig(:,1:nmodes); 
+%	k3(ii,j,:) = S3.k(1:nmodes);
+%        	
+%%% Case 4: FD (Oladeji U)
+%% See compute_eigenU for details
         S4 = compute_eigenU(rho_mean,rho0,zf_mean,f,omega);
-	Ueig4(ii,j,1:nz,:) = S4.Ueig(:,1:nmodes); 
-	k4(ii,j,:) = S4.k(1:nmodes);
+%	Ueig4(ii,j,1:nz,:) = S4.Ueig(:,1:nmodes); 
+%	k4(ii,j,:) = S4.k(1:nmodes);
 
 %% Case 5: Uniform (Maarten)
 % Note: Uniform case uses stratification from Oladeji's function (already masked). 
 	nzM = round(H/dzi); % number of layers
-	nzM = max([nzM 10]); % Require minimum number points (10)
+	nzM = max([nzM 20]); % Require minimum number points (10)
         zfM = linspace(-H,0,nzM+1)';
         dz1 = diff(zfM);
         zcM = zfM(1:end-1) + dz1/2;
         N2M = interp1(zc_mean,S4.N2,zfM,'linear','extrap');
-        [~,~,L5,~,Ueig6t] = sturm_liouville_hyd_normalize(omega,sqrt(N2M),dz1(1),f);
+        [~,~,L5,Weig6t,Ueig6t] = sturm_liouville_hyd_normalize(omega,sqrt(N2M),dz1(1),f);
         Ueig6t(:,2:2:end) = -Ueig6t(:,2:2:end);
 
-        Ueig5(ii,j,1:nzM,:) = Ueig6t(:,2:nmodes+1);
-	k5(ii,j,:) = 2*pi./(L5(1:nmodes));
+        Weig(ii,j,1:nzM,:) = Weig6t(:,2:nmodes+1);
+        Ueig(ii,j,1:nzM,:) = Ueig6t(:,2:nmodes+1);
+	k(ii,j,:) = 2*pi./(L5(1:nmodes));
 
     end
 end
@@ -158,6 +176,8 @@ lat = hycom.lat(1:nx,1:ny);
 depth = hycom.h(1:nx,1:ny); 
 
 %% Save output 
-save([figpath '/eigentile_AMZN1940.mat'],'lon','lat','depth','Ueig1','Ueig2',...
-     'Ueig3','Ueig4','Ueig5','k1','k2','k3','k4','k5')
+save([figpath '/eigtile_amzn' xtilestr ytilestr '_W.mat'],'Weig')
+save([figpath '/eigtile_amzn' xtilestr ytilestr '_U.mat'],'Ueig','k')
+%save([figpath '/eigentile_AMZN1942.mat'],'lon','lat','depth','Ueig1','Ueig2',...
+%     'Ueig3','Ueig4','Ueig5','k1','k2','k3','k4','k5')
 

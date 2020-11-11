@@ -12,7 +12,7 @@ function hycom = read_hycom(runnum,blki,blkj,var)
 % VARIABLES
 % hycom.uiso  % baroclinic velocity (u) 
 % hycom.viso  % baroclinic velocity (v) 
-% hycom.rho   % density  
+% hycom.sig   % density  
 % hycom.temp  % temperature 
 % hycom.salt  % salinity
 % hycom.ubar  % eastward barotropic velocity
@@ -66,7 +66,7 @@ fname = [dirin 'u_iso/u_' num2str(runnum) '_blk_' ...
 fname = [dirin 'v_iso/v_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
       vardim = 3; 
-   case 'rho'
+   case 'sig'
 fname = [dirin 'sig/sig_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
       vardim = 3; 
@@ -91,7 +91,7 @@ fname = [dirin 'srfhgt/srfhgt_' num2str(runnum) '_blk_' ...
            num2str(blki) '_' num2str(blkj) '.BinF'];
       vardim = 2; 
    otherwise 
-      disp('VAR must be: uiso, viso, rho, temp, salt, ssh, steric, srfhgt')
+      disp('VAR must be: uiso, viso, sig, temp, salt, ssh, steric, srfhgt')
       return
 end
 
