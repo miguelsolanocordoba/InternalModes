@@ -38,15 +38,16 @@ loc = 6;  locstr = num2str(loc);
 % plotting options (1=yes, 0=no)
 plotini = 0; % Stratification and filtering 
 ploteig = 1; % Eigenfunctions (Ueig) 
-plotfit = 1; % Velocity and fit (pcolor and time series)
-plot_ke = 1; % Kinetic Energy
-plotsta = 1; % Statistics (R2)
+plotfit = 0; % Velocity and fit (pcolor and time series)
+plot_ke = 0; % Kinetic Energy
+plotsta = 0; % Statistics (R2)
 fntsz = 6;   % legend font size 
 
 dirout = '/data/msolano/figures/modes_hycom/';
 
 %% Load variables
-load(['profile_loc' locstr '.mat'])
+%load(['profile_loc' locstr '.mat'])
+load(['profile_locx.mat'])
 
 uiso = profile.uiso; 
 viso = profile.viso; 
@@ -363,71 +364,75 @@ if ploteig
 %yticklabels([])
 
 figure;
-subplot(161)
-semilogx(imf.N2,imf.z,'k'); hold on
+subplot(121)
+%semilogx(imf.N2,imf.z,'k'); hold on
 semilogx(N2M,zfM,'b'); 
 %plot(imf.N2,imf.z,'k'); hold on
 %semilogx(sqrt(N2M),zfM,'b'); hold on
 title('Stratification'); xlabel('N^2 [1/s^2]'); ylabel('Depth [m]')
-axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
-ylim([ymin 0]); yticklabels([])
+axis tight; ylim([ymin 0]); set(gca,'FontSize',6);% pbaspect([1 4 1]);
+ylim([ymin 0]);% yticklabels([])
 
-subplot(162)
-plot(Ueig1(:,1),zc,'k','LineWidth',2.5); hold on
-plot(Ueig2(:,1),zc,'b'); hold on
-%plot(Ueig3(:,2),zc,'r');
-plot(Ueig4(:,1),zc,'--r');
-plot(Ueig6(:,1),zcM,'--g');
+subplot(122)
+plot(Ueig2(:,1),zc,'k'); hold on
+plot(Ueig2(:,2),zc,'b'); hold on
+plot(Ueig2(:,3),zc,'r');
+plot(Ueig2(:,4),zc,'g');
+%plot(Ueig6(:,1),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
-title('Mode 1'); xlabel('U_{eig}');% ylabel('Depth [m]');
-yticklabels('off')
-axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
-legend(cname{1},cname{2},cname{4},cname{6},'Box','on',...
-       'Position',[0.035 0.67 0.06 0.1],'FontSize',5)
+title('U Eigenmodes'); xlabel('U_{eig}'); ylabel('Depth [m]');
+%yticklabels('off')
+axis tight; ylim([ymin 0]); set(gca,'FontSize',6);% pbaspect([1 4 1]);
+legend('Mode 1','Mode 2','Mode 3','Mode 4','Location','SouthEast')
+%legend(cname{1},cname{2},cname{4},cname{6},'Box','on',...
+%       'Position',[0.035 0.67 0.06 0.1],'FontSize',5)
+print('Ueig.png','-r300','-dpng')
 
-subplot(163)
-plot(Ueig1(:,2),zc,'k','LineWidth',2.5); hold on
-plot(Ueig2(:,2),zc,'b'); 
+
+return
+subplot(153)
+plot(Ueig2(:,2),zc,'k','LineWidth',2.5); hold on
+%plot(Ueig2(:,2),zc,'b'); 
 %plot(Ueig3(:,3),zc,'r');
-plot(Ueig4(:,2),zc,'--r');
+%plot(Ueig4(:,2),zc,'--r');
 plot(Ueig6(:,2),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
 title('Mode 2'); xlabel('U_{eig}'); %ylabel('Depth [m]');
-axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
+axis tight; ylim([ymin 0]); set(gca,'FontSize',6);% pbaspect([1 4 1]);
 yticklabels([])
 
-subplot(164)
-plot(Ueig1(:,3),zc,'k','LineWidth',2.5); hold on
-plot(Ueig2(:,3),zc,'b');
+subplot(154)
+plot(Ueig2(:,3),zc,'k','LineWidth',2.5); hold on
+%plot(Ueig2(:,3),zc,'b');
 %plot(Ueig3(:,4),zc,'r');
-plot(Ueig4(:,3),zc,'--r');
+%plot(Ueig4(:,3),zc,'--r');
 plot(Ueig6(:,3),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
 title('Mode 3'); xlabel('U_{eig}'); %ylabel('Depth [m]');
-axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
-yticklabels([])
+axis tight; ylim([ymin 0]); set(gca,'FontSize',6);% pbaspect([1 4 1]);
+%yticklabels([])
 
-subplot(165)
-plot(Ueig1(:,4),zc,'k','LineWidth',2.5); hold on
-plot(Ueig2(:,4),zc,'b');
+subplot(155)
+plot(Ueig2(:,4),zc,'k','LineWidth',2.5); hold on
+%plot(Ueig2(:,4),zc,'b');
 %plot(Ueig3(:,5),zc,'r');
-plot(Ueig4(:,4),zc,'--r');
+%plot(Ueig4(:,4),zc,'--r');
 plot(Ueig6(:,4),zcM,'--g');
 plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
 title('Mode 4'); xlabel('U_{eig}');% ylabel('Depth [m]');
 axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
 yticklabels([])
 
-subplot(166)
-plot(Ueig1(:,5),zc,'k','LineWidth',2.5); hold on
-plot(Ueig2(:,5),zc,'b'); 
-%plot(Ueig3(:,6),zc,'r');
-plot(Ueig4(:,5),zc,'--r');
-plot(Ueig6(:,5),zcM,'--g');
-plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
-title('Mode 5'); xlabel('U_{eig}');% ylabel('Depth [m]');
-axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
-yticklabels([])
+%subplot(166)
+%plot(Ueig1(:,5),zc,'k','LineWidth',2.5); hold on
+%plot(Ueig2(:,5),zc,'b'); 
+%%plot(Ueig3(:,6),zc,'r');
+%plot(Ueig4(:,5),zc,'--r');
+%plot(Ueig6(:,5),zcM,'--g');
+%plot(zeros(2,1),[-H 0],'--k','LineWidth',1.0);
+%title('Mode 5'); xlabel('U_{eig}');% ylabel('Depth [m]');
+%axis tight; ylim([ymin 0]); set(gca,'FontSize',6); pbaspect([1 4 1]);
+%yticklabels([])
 
 print('Ueig.png','-r300','-dpng')
 

@@ -26,9 +26,9 @@ datapath = '/data/msolano/matfiles';
 
 %% *** INPUT *** %% 
 model = 'GLBc0.04';  % Global HYCOM
-exptn = 221; % Experiment number
-xtile = 15;  % blki
-ytile = 25;  % blkj 
+exptn = 190; % Experiment number
+xtile = 18;  % blki
+ytile = 42;  % blkj 
 dzi = 25;    % layer thickness for uniform grid [m] ***
 nmodes = 10; % number of modes saved 
 
@@ -37,8 +37,12 @@ xtilestr = num2str(xtile);
 ytilestr = num2str(ytile);
 exptnstr = num2str(exptn);
 
+% File name (used for figures and matfiles)
+fname = [model '_' exptnstr '_' xtilestr '_' ytilestr]
+load([datapath '/' fname '_eig.mat'])
+
 % Read hycom variables
-hycom = read_hycom(exptn,xtile,ytile); % !!!edit read_hycom.m to change tile!!! 
+hycom = read_hycom(model,exptn,xtile,ytile); % !!!edit read_hycom.m to change tile!!! 
 [nx,ny,nz,nt] = size(hycom.rho); % tile size 
 nfiles = nx*ny;
 
@@ -151,16 +155,16 @@ for ii = 1:nx
             vfiltM(:,i) = interp1(zc_mean,viso(:,i),zcM,'linear','extrap');
             pfiltM(:,i) = interp1(zc_mean,pertp(:,i),zcM,'linear','extrap');
         end
-        [r2u5(ii,j,:),~] = compute_modfit(ufiltM,dz1,squeeze(Ueig5(ii,j,1:nzM,:)),nmodes);
-        [r2v5(ii,j,:),~] = compute_modfit(vfiltM,dz1,squeeze(Ueig5(ii,j,1:nzM,:)),nmodes);
-        [r2p5(ii,j,:),~] = compute_modfit(pfiltM,dz1,squeeze(Ueig5(ii,j,1:nzM,:)),nmodes);
+        [r2u(ii,j,:),u] = compute_modfit(ufiltM,dz1,squeeze(Ueig(ii,j,1:nzM,:)),nmodes);
+        [r2v(ii,j,:),~] = compute_modfit(vfiltM,dz1,squeeze(Ueig(ii,j,1:nzM,:)),nmodes);
+        [r2p(ii,j,:),~] = compute_modfit(pfiltM,dz1,squeeze(Ueig(ii,j,1:nzM,:)),nmodes);
 
     end
 end
 
 
 %% Save output 
-save([datapath '/' model '_' xtilestr '_' ytilestr '_r2.mat'],'r2u','r2v','r2p')
+save([datapath '/' fname '_r2.mat'],'r2u','r2v','r2p')
 %save([datapath '/eigentile_AMZN1942_r2.mat'],'r2u1','r2u2','r2u3','r2u4','r2u5',...
 %         'r2v1','r2v2','r2v3','r2v4','r2v5','r2p1','r2p2','r2p3','r2p4','r2p5')
 

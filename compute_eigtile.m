@@ -23,9 +23,10 @@ addpath /home/mbui/Temp/forMiguel/funcs/
 figpath = '/data/msolano/matfiles';
 
 %% *** INPUT *** %% 
+model = 'GLBc0.04';  % Global HYCOM
 exptn = 190; % Experiment number
-xtile = 18;  % blki 
-ytile = 40;  % blk j
+xtile = 15;  % blki 
+ytile = 25;  % blkj
 dzi = 25;    % layer thickness for uniform grid [m] ***
 nmodes = 10; % number of modes saved 
 
@@ -35,7 +36,7 @@ ytilestr = num2str(ytile);
 exptnstr = num2str(exptn);  
 
 % Read hycom variables
-hycom = read_hycom(exptn,xtile,ytile); % !!!edit read_hycom.m to change tile!!! 
+hycom = read_hycom(model,exptn,xtile,ytile); % !!!edit read_hycom.m to change tile!!! 
 [nx,ny,nz,nt] = size(hycom.rho); % tile size 
 nfiles = nx*ny; 
 
@@ -176,8 +177,8 @@ lat = hycom.lat(1:nx,1:ny);
 depth = hycom.h(1:nx,1:ny); 
 
 %% Save output 
-save([figpath '/eigtile_amzn' xtilestr ytilestr '_W.mat'],'Weig')
-save([figpath '/eigtile_amzn' xtilestr ytilestr '_U.mat'],'Ueig','k')
+save([figpath '/' model '_' exptnstr '_' xtilestr '_' ytilestr '_eig.mat'],'Weig','Ueig','k')
+
 %save([figpath '/eigentile_AMZN1942.mat'],'lon','lat','depth','Ueig1','Ueig2',...
 %     'Ueig3','Ueig4','Ueig5','k1','k2','k3','k4','k5')
 
